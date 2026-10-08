@@ -1,0 +1,1 @@
+# Gestionale_gunpla_FULL_STACK_PYTHON
