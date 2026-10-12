@@ -2,6 +2,7 @@ import os
 import mysql.connector
 from mysql.connector import Error
 from dotenv import load_dotenv as caricaenv
+from datetime import datetime
 
 caricaenv()
 
@@ -12,6 +13,7 @@ configuratore={
     "password": os.getenv("MYSQL_PASSWORD"),
     "database": os.getenv("MYSQL_DATABASE")
 }
+
 
 
 def _connessione_aperta():
@@ -86,8 +88,9 @@ def ottieni_tutti_i_model_kit():
         cursore = connessione.cursor(dictionary=True)
         
         query = """
-            SELECT id_gunpla, jan, nome_modello, tipologia, prezzo, edizione, quantita, scala 
+            SELECT id_gunpla, jan, nome_modello, tipologia, prezzo, edizione, quantita, scala, attivo 
             FROM gunpla
+            WHERE attivo = 1
             ORDER BY id_gunpla DESC
         """
         cursore.execute(query)
@@ -111,12 +114,13 @@ def ricerca_model_kit_nome(nome_modello):
     try:
         connessione = _connessione_aperta()
         cursore = connessione.cursor(dictionary=True)
+        
         query = """
-                SELECT id_gunpla, jan, nome_modello, tipologia, prezzo, edizione, quantita, scala
-                FROM gunpla
-                WHERE nome_modello LIKE %s
-                ORDER BY nome_modello ASC
-            """
+            SELECT id_gunpla, jan, nome_modello, tipologia, prezzo, edizione, quantita, scala, attivo
+            FROM gunpla
+            WHERE nome_modello LIKE %s AND attivo = 1
+            ORDER BY nome_modello ASC
+        """
         
         valore_ricerca = f"%{nome_modello}%"
         cursore.execute(query, (valore_ricerca,))
@@ -141,9 +145,9 @@ def ricerca_model_kit_tipologia(tipologia_modello):
         cursor = connessione.cursor(dictionary=True)
         
         query = """
-            SELECT id_gunpla, jan, nome_modello, tipologia, prezzo, edizione, quantita, scala
+            SELECT id_gunpla, jan, nome_modello, tipologia, prezzo, edizione, quantita, scala, attivo
             FROM gunpla
-            WHERE tipologia LIKE %s
+            WHERE tipologia LIKE %s AND attivo = 1
             ORDER BY nome_modello ASC
         """
         valore_ricerca = f"%{tipologia_modello}%"
@@ -163,18 +167,19 @@ def ricerca_model_kit_tipologia(tipologia_modello):
             connessione.close()
 
 def ricerca_model_kit_jan(jan):
-    connessione= None
-    cursore=None
+    connessione = None
+    cursore = None
 
     try:
-        connessione= _connessione_aperta()
-        cursore= connessione.cursor(dictionary=True)
+        connessione = _connessione_aperta()
+        cursore = connessione.cursor(dictionary=True)
         jan2 = str(jan).strip()
+        
         query = """
-                SELECT id_gunpla, jan, nome_modello, tipologia, prezzo, edizione, quantita, scala
-                FROM gunpla
-                WHERE jan = %s
-            """
+            SELECT id_gunpla, jan, nome_modello, tipologia, prezzo, edizione, quantita, scala, attivo
+            FROM gunpla
+            WHERE jan = %s AND attivo = 1
+        """
         valore_ricerca = (jan2,)
 
         cursore.execute(query, valore_ricerca)
@@ -192,17 +197,19 @@ def ricerca_model_kit_jan(jan):
             connessione.close()
 
 def ricerca_model_kit_esauriti():
-    connessione= None
-    cursore=None
+
+    connessione = None
+    cursor = None
 
     try:
         connessione = _connessione_aperta()
         cursor = connessione.cursor(dictionary=True)
+        
         query = """
-        SELECT id_gunpla, jan, nome_modello, tipologia, prezzo, edizione, quantita, scala
-        FROM gunpla
-        WHERE quantita = 0
-        ORDER BY nome_modello ASC
+            SELECT id_gunpla, jan, nome_modello, tipologia, prezzo, edizione, quantita, scala, attivo
+            FROM gunpla
+            WHERE quantita = 0 AND attivo = 1
+            ORDER BY nome_modello ASC
         """
         cursor.execute(query)
         risultati = cursor.fetchall()
@@ -211,9 +218,37 @@ def ricerca_model_kit_esauriti():
     except Error as errore:
         print(f"Errore durante il recupero dei prodotti esauriti: {errore}")
         return []
+
     finally:
         if cursor:
             cursor.close()
+        if connessione and connessione.is_connected():
+            connessione.close()
+
+def disattiva_model_kit(jan):
+    connessione = None
+    cursore = None
+
+    try:
+        connessione = _connessione_aperta()
+        cursore = connessione.cursor()
+        
+        query = "UPDATE gunpla SET attivo = 0 WHERE jan = %s"
+        cursore.execute(query, (str(jan).strip(),))
+        connessione.commit()
+        
+        modificati = cursore.rowcount
+        return modificati > 0
+
+    except Error as errore:
+        if connessione:
+            connessione.rollback()
+        print(f"Errore durante la disattivazione del Model Kit: {errore}")
+        return False
+
+    finally:
+        if cursore:
+            cursore.close()
         if connessione and connessione.is_connected():
             connessione.close()
 
@@ -236,7 +271,7 @@ def aggiornamento_quantita_gunplas(jan,quantita_variabile):
         
 
         if nuova_quantita < 0:
-            return False, f"Quantità insufficiente in magazzino. Disponibili: {quantita_aggiornata}, richiesti da rimuovere: {abs(variazione_quantita)}."
+            return False, f"Quantità insufficiente in magazzino. Disponibili: {quantita_aggiornata}, richiesti da rimuovere: {abs(quantita_variabile)}."
         
 
         query_update = "UPDATE gunpla SET quantita = %s WHERE jan = %s"
@@ -250,6 +285,72 @@ def aggiornamento_quantita_gunplas(jan,quantita_variabile):
         if connessione:
             connessione.rollback()
         return False, f"Errore del database: {errore}"
+
+    finally:
+        if cursore:
+            cursore.close()
+        if connessione and connessione.is_connected():
+            connessione.close()
+
+def registra_vendita(carrello, percentuale_sconto=0.0):
+
+    if not carrello:
+        print("Il carrello è vuoto. Impossibile procedere con la vendita.")
+        return None
+
+    connessione = None
+    cursore = None
+
+    totale_lordo = sum(item['prezzo'] * item['quantita'] for item in carrello)
+    totale_netto = totale_lordo * (1 - (percentuale_sconto / 100))
+    data_ora_attuale = datetime.now()
+
+    try:
+
+        connessione = _connessione_aperta()
+        cursore = connessione.cursor()
+
+        query_vendita = """
+            INSERT INTO vendita (data_vendita, totale_vendita)
+            VALUES (%s, %s)
+        """
+        cursore.execute(query_vendita, (data_ora_attuale, totale_netto))
+        
+        id_vendita_generato = cursore.lastrowid
+
+        query_scontrino = """
+            INSERT INTO Scontrino (id_gunpla, prezzo_al_pezzo, id_vendita, quantita_venduta)
+            VALUES (%s, %s, %s, %s)
+        """
+        
+        query_aggiorna_scorte = """
+            UPDATE gunpla
+            SET quantita = quantita - %s
+            WHERE id_gunpla = %s AND quantita >= %s
+        """
+
+        for item in carrello:
+            id_gunpla = item['id_gunpla']
+            prezzo_unitario = item['prezzo']
+            quantita = item['quantita']
+
+            cursore.execute(query_scontrino, (id_gunpla, prezzo_unitario, id_vendita_generato, quantita))
+
+            cursore.execute(query_aggiorna_scorte, (quantita, id_gunpla, quantita))
+            
+
+            if cursore.rowcount == 0:
+                raise Error(f"Giacenza insufficiente in magazzino per il Gunpla ID: {id_gunpla}")
+
+        connessione.commit()
+        print(f"Vendita #{id_vendita_generato} completata con successo! Totale: {totale_netto:.2f}€")
+        return id_vendita_generato
+
+    except Error as errore:
+        if connessione:
+            connessione.rollback()
+        print(f"Errore durante la registrazione della vendita: {errore}")
+        return None
 
     finally:
         if cursore:
