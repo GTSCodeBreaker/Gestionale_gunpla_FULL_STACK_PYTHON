@@ -15,6 +15,9 @@ configuratore={
 
 
 
+cursor = configuratore.cursor()
+
+cursor.execute
 
 
 
