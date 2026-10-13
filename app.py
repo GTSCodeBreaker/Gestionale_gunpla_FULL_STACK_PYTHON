@@ -30,6 +30,21 @@ def dashboard():
     # Lettura dei parametri inviati dalla query string (form GET)
     query_testo = request.args.get("q", "").strip()
     criterio = request.args.get("criterio", "nome")
+
+    # --- EASTER EGG CHAR AZNABLE ---
+    if query_testo.lower() in ["char", "char aznable"]:
+        flash("🔥 Red Comet detected! Performance increased by 3x!", "danger")
+
+    # Selezione della funzione di ricerca
+    if query_testo:
+        if criterio == "jan":
+            gunpla_list = ricerca_model_kit_jan(query_testo)
+        else:
+            gunpla_list = ricerca_model_kit_nome(query_testo)
+    else:
+        gunpla_list = ottieni_tutti_i_model_kit()
+
+
     
     # Selezione della funzione di ricerca appropriata in base al criterio
     if query_testo:

@@ -180,21 +180,41 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const select = document.getElementById('criterioSelect');
-        const input = document.getElementById('searchInput');
+document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('criterioSelect');[cite: 2]
+    const input = document.getElementById('searchInput');[cite: 2]
 
-        function aggiornaInput() {
-            if (select.value === 'jan') {
-                input.placeholder = 'Es. 4573102615053...';
-                input.type = 'number';
-            } else {
-                input.placeholder = 'Cerca per nome del modello...';
-                input.type = 'text';
-            }
+    function aggiornaInput() {
+        if (select && select.value === 'jan') {[cite: 2]
+            input.placeholder = 'Es. 4573102615053...';[cite: 2]
+            input.type = 'number';[cite: 2]
+        } else if (input) {
+            input.placeholder = 'Cerca per nome del modello...';[cite: 2]
+            input.type = 'text';[cite: 2]
         }
+    }
+    if (select) {
+        select.addEventListener('change', aggiornaInput);[cite: 2]
+    }
 
-        select.addEventListener('change', aggiornaInput);
-    });
+    // --- EASTER EGG CHAR AZNABLE ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const query = (urlParams.get('q') || '').toLowerCase().trim();
+
+    if (query === 'char' || query === 'char aznable') {
+        // Modifica dinamica delle variabili CSS per trasformare l'interfaccia nel tema "Cometa Rossa"
+        document.documentElement.style.setProperty('--gz-blue-dark', '#8b0000'); // Sfondo Navbar
+        document.documentElement.style.setProperty('--gz-blue-primary', '#d32f2f'); // Pulsanti e bordi card
+        document.documentElement.style.setProperty('--gz-cyan-sensor', '#ff4500'); // Bordo inferiore navbar
+
+        // Sfondo leggermente rosato per il corpo della pagina
+        document.body.style.backgroundColor = '#fdf2f2';
+
+        // Riproduzione soundtrack
+        const charAudio = new Audio("{{ url_for('static', filename='audio/Sassotaru_Char.mp3.mp3') }}");[cite: 2]
+        charAudio.volume = 0.6;
+        charAudio.play().catch(err => console.log("Autoplay limitato dal browser:", err));
+    }
+});
 </script>
 {% endblock %}
