@@ -181,9 +181,9 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Gestione input di ricerca
-    const select = document.getElementById('criterioSelect');[cite: 4]
-    const input = document.getElementById('searchInput');[cite: 4]
+    // 1. Gestione input di ricerca
+    const select = document.getElementById('criterioSelect');
+    const input = document.getElementById('searchInput');
 
     function aggiornaInput() {
         if (select && select.value === 'jan') {
@@ -198,29 +198,27 @@ document.addEventListener('DOMContentLoaded', function() {
         select.addEventListener('change', aggiornaInput);
     }
 
-    // --- LOGICA EASTER EGG CHAR AZNABLE ---
+    // 2. Logica Easter Egg Char Aznable
     const urlParams = new URLSearchParams(window.location.search);
     const query = (urlParams.get('q') || '').toLowerCase().trim();
 
     if (query === 'char' || query === 'char aznable') {
-        // 1. Cambia il tema grafico
         document.documentElement.style.setProperty('--gz-blue-dark', '#8b0000');
         document.documentElement.style.setProperty('--gz-blue-primary', '#d32f2f');
         document.documentElement.style.setProperty('--gz-cyan-sensor', '#ff4500');
         document.body.style.backgroundColor = '#fdf2f2';
 
-        // 2. Inizializza l'audio caricato dalla cartella static
-        const charAudio = new Audio("{{ url_for('static', filename='audio/Sassotaru_Char.mp3.mp3') }}");
+        if (input) {
+            input.style.borderColor = '#d32f2f';
+            input.style.boxShadow = '0 0 10px rgba(211, 47, 47, 0.5)';
+        }
+
+        const charAudio = new Audio("{{ url_for('static', filename='audio/Sassotaru_Char.mp3') }}");
         charAudio.volume = 0.6;
 
-        // Prova la riproduzione
         const playPromise = charAudio.play();
-
         if (playPromise !== undefined) {
             playPromise.catch(error => {
-                console.warn("Autoplay bloccato dal browser. L'audio partirà al primo click:", error);
-                
-                // Se l'autoplay viene bloccato, ascolta il primo click dell'utente per riprodurlo
                 const startAudioOnClick = () => {
                     charAudio.play();
                     document.removeEventListener('click', startAudioOnClick);
