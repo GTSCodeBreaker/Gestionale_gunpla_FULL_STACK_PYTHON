@@ -54,7 +54,7 @@ Il file `app.py` costituisce il cuore dell'applicazione web sviluppata con il fr
 
 ---
 
-## 4. Easter Egg: Sblocco del Tema Segreto "Cometa Rossa" (Char Aznable)
+## 4. Easter Egg: Sblocco del Tema Segreto "Cometa Rossa"
 
 All'interno dell'interfaccia è nascosto uno speciale **Easter Egg** che consente di sbloccare il tema visivo esclusivo dedicato a **Char Aznable**, l'iconico pilota dell'Universal Century noto come la *Cometa Rossa*.
 
@@ -117,9 +117,10 @@ python popolareDB.py
 Avviare il server di sviluppo Flask:
 
 ```bash
-flask --app app run --debug
+flask --app app run --debug --port 8080
 ```
-L'applicazione sarà visibile nel browser all'indirizzo `http://127.0.0.1:5000`.
+L'applicazione sarà visibile nel browser all'indirizzo [http://127.0.0.1:8080].
+P.S. a discrezione vostra potete cambiare la porta con una che volete
 
 ---
 
