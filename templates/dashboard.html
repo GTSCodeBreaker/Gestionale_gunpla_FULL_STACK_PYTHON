@@ -181,20 +181,20 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const select = document.getElementById('criterioSelect');[cite: 2]
-    const input = document.getElementById('searchInput');[cite: 2]
+    const select = document.getElementById('criterioSelect');
+    const input = document.getElementById('searchInput');
 
     function aggiornaInput() {
-        if (select && select.value === 'jan') {[cite: 2]
-            input.placeholder = 'Es. 4573102615053...';[cite: 2]
-            input.type = 'number';[cite: 2]
+        if (select && select.value === 'jan') {
+            input.placeholder = 'Es. 4573102615053...';
+            input.type = 'number';
         } else if (input) {
-            input.placeholder = 'Cerca per nome del modello...';[cite: 2]
-            input.type = 'text';[cite: 2]
+            input.placeholder = 'Cerca per nome del modello...';
+            input.type = 'text';
         }
     }
     if (select) {
-        select.addEventListener('change', aggiornaInput);[cite: 2]
+        select.addEventListener('change', aggiornaInput);
     }
 
     // --- EASTER EGG CHAR AZNABLE ---
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.style.backgroundColor = '#fdf2f2';
 
         // Riproduzione soundtrack
-        const charAudio = new Audio("{{ url_for('static', filename='audio/Sassotaru_Char.mp3.mp3') }}");[cite: 2]
+        const charAudio = new Audio("{{ url_for('static', filename='audio/Sassotaru_Char.mp3.mp3') }}");
         charAudio.volume = 0.6;
         charAudio.play().catch(err => console.log("Autoplay limitato dal browser:", err));
     }
