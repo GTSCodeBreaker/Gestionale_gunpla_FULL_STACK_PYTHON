@@ -9,7 +9,9 @@ from database import (
     ricerca_model_kit_jan,
     registrazione_gunpla,
     aggiornamento_quantita_gunplas,
-    registra_vendita
+    registra_vendita,
+    ottieni_storico_vendite,     
+    ottieni_dettaglio_vendita
 )
 
 load_dotenv()
@@ -233,6 +235,38 @@ def cassa():
 
     return render_template("cassa.html", carrello=elementi_carrello, totale_lordo=totale_lordo)
 
+
+# ==============================================================================
+# ROUTE STORICO SCONTRINI
+# ==============================================================================
+
+@app.route("/storico_scontrini")
+def storico_scontrini():
+    """Mostra la lista completa di tutti gli scontrini e delle vendite effettuate."""
+    vendite = ottieni_storico_vendite()
+    
+    totale_incassato = sum(float(v["totale_vendita"]) for v in vendite)
+    totale_scontrini = len(vendite)
+    media_scontrino = (totale_incassato / totale_scontrini) if totale_scontrini > 0 else 0.0
+
+    return render_template(
+        "storico_scontrini.html",
+        vendite=vendite,
+        totale_incassato=totale_incassato,
+        totale_scontrini=totale_scontrini,
+        media_scontrino=media_scontrino
+    )
+
+
+@app.route("/storico_scontrini/<int:id_vendita>")
+def dettaglio_scontrino(id_vendita):
+    """Visualizza o ristampa una specifica ricevuta digitale."""
+    ricevuta = ottieni_dettaglio_vendita(id_vendita)
+    if not ricevuta:
+        flash(f"Scontrino #{id_vendita} non trovato nel database.", "danger")
+        return redirect(url_for("storico_scontrini"))
+        
+    return render_template("conferma_ordine.html", ricevuta=ricevuta)
 
 if __name__ == "__main__":
     app.run(debug=True, port=8080)

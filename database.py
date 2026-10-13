@@ -357,3 +357,101 @@ def registra_vendita(carrello, percentuale_sconto=0.0):
             cursore.close()
         if connessione and connessione.is_connected():
             connessione.close()
+
+def ottieni_storico_vendite():
+    """Recupera la lista di tutte le vendite effettuate con l'elenco degli articoli associati."""
+    connessione = None
+    cursore = None
+    try:
+        connessione = _connessione_aperta()
+        cursore = connessione.cursor(dictionary=True)
+
+        # Query per recuperare tutte le vendite ordinate dalla più recente
+        query_vendite = """
+            SELECT id_vendita, data_vendita, totale_vendita 
+            FROM vendita 
+            ORDER BY id_vendita DESC
+        """
+        cursore.execute(query_vendite)
+        vendite = cursore.fetchall()
+
+        # Query per recuperare tutti i dettagli degli scontrini con nome del Gunpla
+        query_dettagli = """
+            SELECT s.id_vendita, s.id_gunpla, s.prezzo_al_pezzo, s.quantita_venduta, g.nome_modello, g.jan
+            FROM Scontrino s
+            JOIN gunpla g ON s.id_gunpla = g.id_gunpla
+        """
+        cursore.execute(query_dettagli)
+        dettagli = cursore.fetchall()
+
+        # Associazione degli articoli a ciascuna vendita
+        mappa_dettagli = {}
+        for d in dettagli:
+            id_v = d["id_vendita"]
+            if id_v not in mappa_dettagli:
+                mappa_dettagli[id_v] = []
+            mappa_dettagli[id_v].append(d)
+
+        for v in vendite:
+            v["articoli"] = mappa_dettagli.get(v["id_vendita"], [])
+
+        return vendite
+
+    except Error as errore:
+        print(f"Errore durante il recupero dello storico vendite: {errore}")
+        return []
+
+    finally:
+        if cursore:
+            cursore.close()
+        if connessione and connessione.is_connected():
+            connessione.close()
+
+def ottieni_dettaglio_vendita(id_vendita):
+    """Recupera la ricevuta/scontrino di una specifica vendita tramite ID."""
+    connessione = None
+    cursore = None
+    try:
+        connessione = _connessione_aperta()
+        cursore = connessione.cursor(dictionary=True)
+
+        query_v = "SELECT id_vendita, data_vendita, totale_vendita FROM vendita WHERE id_vendita = %s"
+        cursore.execute(query_v, (id_vendita,))
+        vendita = cursore.fetchone()
+
+        if not vendita:
+            return None
+
+        query_art = """
+            SELECT s.prezzo_al_pezzo AS prezzo, s.quantita_venduta AS quantita, g.nome_modello, g.jan
+            FROM Scontrino s
+            JOIN gunpla g ON s.id_gunpla = g.id_gunpla
+            WHERE s.id_vendita = %s
+        """
+        cursore.execute(query_art, (id_vendita,))
+        articoli = cursore.fetchall()
+
+        totale_lordo = sum(float(a["prezzo"]) * a["quantita"] for a in articoli)
+        totale_netto = float(vendita["totale_vendita"])
+        valore_sconto = totale_lordo - totale_netto
+        percentuale_sconto = (valore_sconto / totale_lordo * 100) if totale_lordo > 0 else 0.0
+
+        return {
+            "id_vendita": vendita["id_vendita"],
+            "data_vendita": vendita["data_vendita"],
+            "articoli": articoli,
+            "totale_lordo": totale_lordo,
+            "valore_sconto": valore_sconto,
+            "percentuale_sconto": percentuale_sconto,
+            "totale_netto": totale_netto
+        }
+
+    except Error as errore:
+        print(f"Errore durante il recupero dello scontrino #{id_vendita}: {errore}")
+        return None
+
+    finally:
+        if cursore:
+            cursore.close()
+        if connessione and connessione.is_connected():
+            connessione.close()

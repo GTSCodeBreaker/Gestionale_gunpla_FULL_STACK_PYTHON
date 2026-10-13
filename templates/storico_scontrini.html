@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Storico Scontrini (AE-OS) | Anaheim Electronics{% endblock %}
+
+{% block content %}
+<!-- Intestazione Pagina -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h2 class="fw-bold mb-0 text-dark">Storico Scontrini & Vendite</h2>
+            <span class="badge bg-dark rounded-pill">AE-OS Register</span>
+        </div>
+        <p class="text-muted small mb-0">Registro fiscale e cronologia transazioni effettuate</p>
+    </div>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Torna al Magazzino
+    </a>
+</div>
+
+<!-- Schede Statistiche Vendite -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card card-wing card-wing-cyan p-3 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-bold text-uppercase">Totale Incassato</span>
+                    <h3 class="fw-bold my-1 text-success">&euro; {{ "%.2f"|format(totale_incassato) }}</h3>
+                    <span class="text-muted small">Fatturato registrato</span>
+                </div>
+                <div class="fs-1 text-success opacity-75"><i class="bi bi-cash-stack"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card card-wing card-wing-gold p-3 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-bold text-uppercase">Scontrini Emessi</span>
+                    <h3 class="fw-bold my-1 text-primary">{{ totale_scontrini }}</h3>
+                    <span class="text-muted small">Transazioni concluse</span>
+                </div>
+                <div class="fs-1 text-primary opacity-75"><i class="bi bi-receipt"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card card-wing p-3 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-bold text-uppercase">Media Scontrino</span>
+                    <h3 class="fw-bold my-1 text-warning">&euro; {{ "%.2f"|format(media_scontrino) }}</h3>
+                    <span class="text-muted small">Valore medio vendita</span>
+                </div>
+                <div class="fs-1 text-warning opacity-75"><i class="bi bi-graph-up-arrow"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabella Storico Scontrini -->
+<div class="card card-wing shadow-sm">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-receipt-cutoff me-2 text-primary"></i>Registro Transazioni</h5>
+        <span class="badge bg-secondary fs-6">{{ vendite|length }} scontrini</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 table-wing">
+            <thead>
+                <tr>
+                    <th scope="col"># ID</th>
+                    <th scope="col">Data e Ora</th>
+                    <th scope="col">Articoli Acquistati</th>
+                    <th scope="col">Totale Netto</th>
+                    <th scope="col" class="text-end">Azione</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in vendite %}
+                <tr>
+                    <td><strong>#VND-{{ v.id_vendita }}</strong></td>
+                    <td class="small text-muted">
+                        <i class="bi bi-calendar3 me-1"></i> {{ v.data_vendita.strftime('%d/%m/%Y - %H:%M') if v.data_vendita else 'N/D' }}
+                    </td>
+                    <td>
+                        <div class="vstack gap-1">
+                            {% for art in v.articoli %}
+                            <span class="small">
+                                <span class="badge bg-light text-dark border">{{ art.quantita_venduta }}x</span>
+                                {{ art.nome_modello }}
+                                <span class="text-muted">(&euro; {{ "%.2f"|format(art.prezzo_al_pezzo) }})</span>
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td class="fw-bold text-success fs-6">&euro; {{ "%.2f"|format(v.totale_vendita) }}</td>
+                    <td class="text-end">
+                        <a href="{{ url_for('dettaglio_scontrino', id_vendita=v.id_vendita) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-printer me-1"></i> Ristampa
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">
+                        Nessuna vendita presente nel registro.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

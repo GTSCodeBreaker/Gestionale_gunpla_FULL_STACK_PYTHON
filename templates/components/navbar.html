@@ -22,7 +22,8 @@
                 
                 <!-- Menù a Cascata Sezioni AE-OS -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {% if request.endpoint in ['dashboard', 'visualizza_carrello'] %}active{% endif %}" 
+                    <!-- Aggiunto 'storico_scontrini' nella lista delle rotte attive -->
+                    <a class="nav-link dropdown-toggle {% if request.endpoint in ['dashboard', 'visualizza_carrello', 'storico_scontrini'] %}active{% endif %}" 
                        href="#" 
                        id="gestionaleDropdown" 
                        role="button" 
@@ -31,13 +32,26 @@
                         <i class="bi bi-layers-fill me-1"></i> Sezioni AE-OS
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark shadow" aria-labelledby="gestionaleDropdown">
+                        
+                        <!-- 1. Magazzino Gunpla -->
                         <li>
                             <a class="dropdown-item {% if request.endpoint == 'dashboard' %}active{% endif %}" 
                                href="{{ url_for('dashboard') }}">
                                 <i class="bi bi-boxes me-2"></i> Magazzino Gunpla
                             </a>
                         </li>
+
+                        <!-- 2. Storico Scontrini (NUOVA VOCE) -->
+                        <li>
+                            <a class="dropdown-item {% if request.endpoint == 'storico_scontrini' %}active{% endif %}" 
+                               href="{{ url_for('storico_scontrini') }}">
+                                <i class="bi bi-receipt-cutoff me-2"></i> Storico Scontrini
+                            </a>
+                        </li>
+
                         <li><hr class="dropdown-divider"></li>
+
+                        <!-- 3. Carrello Spesa -->
                         <li>
                             <a class="dropdown-item d-flex align-items-center justify-content-between {% if request.endpoint == 'visualizza_carrello' %}active{% endif %}" 
                                href="{{ url_for('visualizza_carrello') }}">
@@ -49,6 +63,7 @@
                                 {% endif %}
                             </a>
                         </li>
+
                     </ul>
                 </li>
 
@@ -66,7 +81,6 @@
                 <span class="text-white-50"><i class="bi bi-shop me-1 text-warning"></i> The Gunpla Guys</span>
                 
                 <span class="border-start ps-3 border-secondary d-flex align-items-center gap-2">
-                    <!-- Avatar Operatore (wing_zero.jpeg) -->
                     <img src="{{ url_for('static', filename='img/wing_zero.jpeg') }}" 
                          alt="Wing Zero Avatar" 
                          height="28" 
@@ -78,4 +92,4 @@
             </div>
         </div>
     </div>
-</nav><title></title>
+</nav>
