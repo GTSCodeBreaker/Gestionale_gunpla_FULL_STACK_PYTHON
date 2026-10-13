@@ -2,68 +2,37 @@
     <div class="container">
         <!-- Logo Ufficiale Anaheim Electronics -->
         <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('dashboard') }}">
-            <img src="{{ url_for('static', filename='img/anaheim_logo.webp') }}" 
-                 alt="Anaheim Electronics Logo" 
-                 height="36" 
-                 class="d-inline-block align-text-top">
+            <img src="{{ url_for('static', filename='img/anaheim_logo.webp') }}" alt="Logo" height="36">
             <div>
                 <span class="fw-bold text-uppercase">ANAHEIM ELECTRONICS</span>
-                <span class="badge bg-danger ms-1 align-text-top" style="font-size: 0.65rem;">AE-OS</span>
+                <span class="badge bg-danger ms-1" style="font-size: 0.65rem;">AE-OS</span>
             </div>
         </a>
 
-        <!-- Toggler Mobile -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navMain">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                
-                <!-- Menù a Cascata Sezioni AE-OS -->
+                <!-- Menu Sezioni AE-OS -->
                 <li class="nav-item dropdown">
-                    <!-- Aggiunto 'storico_scontrini' nella lista delle rotte attive -->
                     <a class="nav-link dropdown-toggle {% if request.endpoint in ['dashboard', 'visualizza_carrello', 'storico_scontrini'] %}active{% endif %}" 
-                       href="#" 
-                       id="gestionaleDropdown" 
-                       role="button" 
-                       data-bs-toggle="dropdown" 
-                       aria-expanded="false">
+                       href="#" id="gestionaleDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-layers-fill me-1"></i> Sezioni AE-OS
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark shadow" aria-labelledby="gestionaleDropdown">
-                        
-                        <!-- 1. Magazzino Gunpla -->
-                        <li>
-                            <a class="dropdown-item {% if request.endpoint == 'dashboard' %}active{% endif %}" 
-                               href="{{ url_for('dashboard') }}">
-                                <i class="bi bi-boxes me-2"></i> Magazzino Gunpla
-                            </a>
-                        </li>
-
-                        <!-- 2. Storico Scontrini (NUOVA VOCE) -->
-                        <li>
-                            <a class="dropdown-item {% if request.endpoint == 'storico_scontrini' %}active{% endif %}" 
-                               href="{{ url_for('storico_scontrini') }}">
-                                <i class="bi bi-receipt-cutoff me-2"></i> Storico Scontrini
-                            </a>
-                        </li>
-
+                        <li><a class="dropdown-item" href="{{ url_for('dashboard') }}"><i class="bi bi-boxes me-2"></i> Magazzino Gunpla</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('storico_scontrini') }}"><i class="bi bi-receipt-cutoff me-2"></i> Storico Scontrini</a></li>
                         <li><hr class="dropdown-divider"></li>
-
-                        <!-- 3. Carrello Spesa -->
                         <li>
-                            <a class="dropdown-item d-flex align-items-center justify-content-between {% if request.endpoint == 'visualizza_carrello' %}active{% endif %}" 
-                               href="{{ url_for('visualizza_carrello') }}">
-                                <span><i class="bi bi-cart3 me-2"></i> Carrello Spesa</span>
+                            <a class="dropdown-item d-flex align-items-center justify-content-between" href="{{ url_for('visualizza_carrello') }}">
+                                <span><i class="bi bi-cart3 me-2"></i> Carrello</span>
                                 {% if session.get('carrello') %}
-                                    <span class="badge rounded-pill bg-danger">
-                                        {{ session.get('carrello')|length }}
-                                    </span>
+                                <span class="badge rounded-pill bg-danger">{{ session.get('carrello')|length }}</span>
                                 {% endif %}
                             </a>
                         </li>
-
                     </ul>
                 </li>
 
@@ -74,19 +43,59 @@
                     </a>
                 </li>
 
+                <!-- 🎨 MENU A TENDINA TEMI MOBILE SUIT -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="themeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-palette-fill me-1 text-warning"></i> Temi MS
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark shadow" aria-labelledby="themeDropdown">
+                        <li class="dropdown-header text-uppercase fw-bold text-info border-bottom border-secondary mb-1">
+                            Seleziona Sistema
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="setMsTheme('wing-zero')">
+                                <span class="rounded-circle d-inline-block" style="width: 10px; height: 10px; background-color: #00cbd6;"></span>
+                                Wing Zero EW (Default)
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="setMsTheme('rx-78-2')">
+                                <span class="rounded-circle d-inline-block" style="width: 10px; height: 10px; background-color: #d90429;"></span>
+                                RX-78-2 Gundam
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="setMsTheme('zaku-green')">
+                                <span class="rounded-circle d-inline-block" style="width: 10px; height: 10px; background-color: #2b9348;"></span>
+                                MS-06 Zaku II (Verde)
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="setMsTheme('unicorn-destroy')">
+                                <span class="rounded-circle d-inline-block" style="width: 10px; height: 10px; background-color: #ff0055;"></span>
+                                RX-0 Unicorn (Destroy)
+                            </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <!-- TEMA CHAR (BLOCCATO DI DEFAULT) -->
+                        <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center justify-content-between text-danger fw-bold" id="btnCharTheme" onclick="setMsTheme('char')" disabled>
+                                <span class="d-flex align-items-center gap-2">
+                                    <span class="rounded-circle d-inline-block" style="width: 10px; height: 10px; background-color: #d32f2f;"></span>
+                                    Char's Red Comet
+                                </span>
+                                <i class="bi bi-lock-fill" id="charLockIcon"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </li>
             </ul>
 
-            <!-- Info Store & Operatore GTS-CodeBreaker con Avatar Wing Zero -->
+            <!-- Info Operatore -->
             <div class="d-flex align-items-center gap-3 text-light small">
                 <span class="text-white-50"><i class="bi bi-shop me-1 text-warning"></i> The Gunpla Guys</span>
-                
                 <span class="border-start ps-3 border-secondary d-flex align-items-center gap-2">
-                    <img src="{{ url_for('static', filename='img/wing_zero.jpeg') }}" 
-                         alt="Wing Zero Avatar" 
-                         height="28" 
-                         width="28" 
-                         class="rounded-circle border border-info object-fit-cover shadow-sm">
-                    
+                    <img src="{{ url_for('static', filename='img/wing_zero.jpeg') }}" height="28" width="28" class="rounded-circle border border-info object-fit-cover shadow-sm">
                     <span>Operatore: <strong class="text-warning">GTS-CodeBreaker</strong></span>
                 </span>
             </div>

@@ -181,7 +181,7 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Gestione input di ricerca
+    // 1. Gestione dinamica input di ricerca
     const select = document.getElementById('criterioSelect');
     const input = document.getElementById('searchInput');
 
@@ -198,21 +198,25 @@ document.addEventListener('DOMContentLoaded', function() {
         select.addEventListener('change', aggiornaInput);
     }
 
-    // 2. Logica Easter Egg Char Aznable
+    // 2. Sblocco Easter Egg Char Aznable
     const urlParams = new URLSearchParams(window.location.search);
     const query = (urlParams.get('q') || '').toLowerCase().trim();
 
     if (query === 'char' || query === 'char aznable') {
-        document.documentElement.style.setProperty('--gz-blue-dark', '#8b0000');
-        document.documentElement.style.setProperty('--gz-blue-primary', '#d32f2f');
-        document.documentElement.style.setProperty('--gz-cyan-sensor', '#ff4500');
-        document.body.style.backgroundColor = '#fdf2f2';
+        // Salva lo sblocco permanente nel localStorage
+        localStorage.setItem('charUnlocked', 'true');
+        localStorage.setItem('selectedMsTheme', 'char');
+
+        // Aggiorna lo stato del menu e applica i colori
+        if (typeof checkCharUnlockState === 'function') checkCharUnlockState();
+        if (typeof applyThemeVariables === 'function') applyThemeVariables('char');
 
         if (input) {
             input.style.borderColor = '#d32f2f';
-            input.style.boxShadow = '0 0 10px rgba(211, 47, 47, 0.5)';
+            input.style.boxShadow = '0 0 12px rgba(211, 47, 47, 0.6)';
         }
 
+        // Riproduzione soundtrack
         const charAudio = new Audio("{{ url_for('static', filename='audio/Sassotaru_Char.mp3') }}");
         charAudio.volume = 0.6;
 
