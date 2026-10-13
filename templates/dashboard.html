@@ -181,8 +181,9 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const select = document.getElementById('criterioSelect');
-    const input = document.getElementById('searchInput');
+    // Gestione input di ricerca
+    const select = document.getElementById('criterioSelect');[cite: 4]
+    const input = document.getElementById('searchInput');[cite: 4]
 
     function aggiornaInput() {
         if (select && select.value === 'jan') {
@@ -197,23 +198,36 @@ document.addEventListener('DOMContentLoaded', function() {
         select.addEventListener('change', aggiornaInput);
     }
 
-    // --- EASTER EGG CHAR AZNABLE ---
+    // --- LOGICA EASTER EGG CHAR AZNABLE ---
     const urlParams = new URLSearchParams(window.location.search);
     const query = (urlParams.get('q') || '').toLowerCase().trim();
 
     if (query === 'char' || query === 'char aznable') {
-        // Modifica dinamica delle variabili CSS per trasformare l'interfaccia nel tema "Cometa Rossa"
-        document.documentElement.style.setProperty('--gz-blue-dark', '#8b0000'); // Sfondo Navbar
-        document.documentElement.style.setProperty('--gz-blue-primary', '#d32f2f'); // Pulsanti e bordi card
-        document.documentElement.style.setProperty('--gz-cyan-sensor', '#ff4500'); // Bordo inferiore navbar
-
-        // Sfondo leggermente rosato per il corpo della pagina
+        // 1. Cambia il tema grafico
+        document.documentElement.style.setProperty('--gz-blue-dark', '#8b0000');
+        document.documentElement.style.setProperty('--gz-blue-primary', '#d32f2f');
+        document.documentElement.style.setProperty('--gz-cyan-sensor', '#ff4500');
         document.body.style.backgroundColor = '#fdf2f2';
 
-        // Riproduzione soundtrack
-        const charAudio = new Audio("{{ url_for('static', filename='audio/Sassotaru_Char.mp3.mp3') }}");
+        // 2. Inizializza l'audio caricato dalla cartella static
+        const charAudio = new Audio("{{ url_for('static', filename='audio/char_theme.mp3') }}");[cite: 4, 11]
         charAudio.volume = 0.6;
-        charAudio.play().catch(err => console.log("Autoplay limitato dal browser:", err));
+
+        // Prova la riproduzione
+        const playPromise = charAudio.play();
+
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.warn("Autoplay bloccato dal browser. L'audio partirà al primo click:", error);
+                
+                // Se l'autoplay viene bloccato, ascolta il primo click dell'utente per riprodurlo
+                const startAudioOnClick = () => {
+                    charAudio.play();
+                    document.removeEventListener('click', startAudioOnClick);
+                };
+                document.addEventListener('click', startAudioOnClick);
+            });
+        }
     }
 });
 </script>
