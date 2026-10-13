@@ -1,0 +1,50 @@
+ :root {
+    --gz-blue-primary: #0e4483;
+    --gz-blue-dark: #07274f;
+    --gz-red-accent: #d32f2f;
+    --gz-gold-vfin: #f59e0b;
+    --gz-cyan-sensor: #00cbd6;
+    --gz-frame-dark: #1e293b;
+    --gz-armor-white: #f8fafc;
+}
+
+body {
+    background-color: var(--gz-armor-white);
+    color: var(--gz-frame-dark);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.bg-wing-zero {
+    background-color: var(--gz-blue-dark) !important;
+    border-bottom: 3px solid var(--gz-cyan-sensor);
+}
+
+.btn-wing-primary {
+    background-color: var(--gz-blue-primary);
+    color: #ffffff;
+    border: none;
+}
+
+.btn-wing-primary:hover {
+    background-color: var(--gz-cyan-sensor);
+    color: var(--gz-blue-dark);
+}
+
+.card-wing {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-top: 4px solid var(--gz-blue-primary);
+    border-radius: 8px;
+}
+
+.card-wing-gold { border-top-color: var(--gz-gold-vfin); }
+.card-wing-red { border-top-color: var(--gz-red-accent); }
+.card-wing-cyan { border-top-color: var(--gz-cyan-sensor); }
+
+.table-wing thead {
+    background-color: var(--gz-blue-dark);
+    color: #ffffff;
+}

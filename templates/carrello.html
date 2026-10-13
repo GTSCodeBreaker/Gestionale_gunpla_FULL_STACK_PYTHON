@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Carrello Acquisti | Wing Zero ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0 text-dark">Carrello Spesa</h2>
+        <p class="text-muted small mb-0">Riepilogo dei prodotti da vendere alla cassa</p>
+    </div>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Continua gli acquisti
+    </a>
+</div>
+
+{% if carrello %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card card-wing shadow-sm mb-4">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Prodotto</th>
+                            <th>Prezzo cad.</th>
+                            <th>Quantità</th>
+                            <th>Subtotale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in carrello %}
+                        <tr>
+                            <td class="fw-semibold">{{ item.nome_modello }}</td>
+                            <td>&euro; {{ "%.2f"|format(item.prezzo) }}</td>
+                            <td><span class="badge bg-light text-dark border fs-6">{{ item.quantita }}</span></td>
+                            <td class="fw-bold text-success">&euro; {{ "%.2f"|format(item.prezzo * item.quantita) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cassa & Totali -->
+    <div class="col-lg-4">
+        <div class="card card-wing card-wing-gold shadow-sm p-4">
+            <h4 class="fw-bold mb-3">Riepilogo Ordine</h4>
+            <div class="d-flex justify-content-between my-2 fs-5">
+                <span>Totale Parziale:</span>
+                <strong class="text-primary">&euro; {{ "%.2f"|format(totale) }}</strong>
+            </div>
+            <hr>
+            <div class="d-grid gap-2 mt-3">
+                <button class="btn btn-success btn-lg fw-semibold">
+                    <i class="bi bi-cash-stack me-1"></i> Vai alla Cassa
+                </button>
+                <form action="{{ url_for('svuota_carrello') }}" method="POST" class="d-grid">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash me-1"></i> Svuota Carrello
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card card-wing p-5 text-center shadow-sm">
+    <i class="bi bi-cart-x fs-1 text-muted mb-3"></i>
+    <h4>Il carrello è vuoto</h4>
+    <p class="text-muted">Seleziona dei prodotti dalla dashboard per aggiungerli al carrello.</p>
+    <div class="mt-3">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-wing-primary px-4">Torna al Magazzino</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

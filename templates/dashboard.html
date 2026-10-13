@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Magazzino Gunpla | Wing Zero ERP{% endblock %}
+
+{% block content %}
+<!-- Titolo & Pulsante Azione -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0 text-dark">Gestione Magazzino</h2>
+        <p class="text-muted small mb-0">Catalogo e giacenze dei Model Kit registrati nel database</p>
+    </div>
+    <a href="{{ url_for('nuovo_gunpla') }}" class="btn btn-wing-primary px-3 py-2 fw-semibold">
+        <i class="bi bi-plus-lg me-1"></i> Nuovo Model Kit
+    </a>
+</div>
+
+<!-- KPI / Statistiche del Gestionale -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card card-wing card-wing-cyan p-3 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-bold text-uppercase">Totale Pezzi in Stock</span>
+                    <h3 class="fw-bold my-1 text-primary">{{ totale_pezzi }}</h3>
+                    <span class="text-muted small">Model Kit disponibili</span>
+                </div>
+                <div class="fs-1 text-info opacity-75"><i class="bi bi-boxes"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card card-wing card-wing-gold p-3 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-bold text-uppercase">Valore Magazzino</span>
+                    <h3 class="fw-bold my-1 text-warning">&euro; {{ "%.2f"|format(valore_magazzino) }}</h3>
+                    <span class="text-muted small">Stima totale merci</span>
+                </div>
+                <div class="fs-1 text-warning opacity-75"><i class="bi bi-currency-euro"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card card-wing card-wing-red p-3 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-bold text-uppercase">Scorte Critiche</span>
+                    <h3 class="fw-bold my-1 text-danger">{{ scorte_critiche }}</h3>
+                    <span class="text-danger small"><i class="bi bi-exclamation-triangle"></i> &le; 2 unità rimaste</span>
+                </div>
+                <div class="fs-1 text-danger opacity-75"><i class="bi bi-shield-exclamation"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <td class="text-end">
+    {% if gunpla.quantita > 0 %}
+    <form action="{{ url_for('aggiungi_al_carrello', id_gunpla=gunpla.id_gunpla) }}" method="POST" class="d-inline-flex gap-1">
+        <input type="number" name="quantita" value="1" min="1" max="{{ gunpla.quantita }}" 
+               class="form-control form-control-sm text-center" style="width: 60px;">
+        <button type="submit" class="btn btn-sm btn-wing-primary" title="Aggiungi al carrello">
+            <i class="bi bi-cart-plus-fill"></i>
+        </button>
+    </form>
+    {% else %}
+    <button class="btn btn-sm btn-secondary" disabled title="Esaurito">
+        <i class="bi bi-cart-x"></i>
+    </button>
+    {% endif %}
+
+    <div class="btn-group btn-group-sm ms-1" role="group">
+        <button class="btn btn-outline-secondary" title="Modifica"><i class="bi bi-pencil"></i></button>
+    </div>
+</td>
+</div>
+
+<!-- Card principale contenente la tabella formattata -->
+<div class="card card-wing shadow-sm">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-task me-2 text-primary"></i>Elenco Gunpla</h5>
+        <span class="badge bg-secondary fs-6">{{ gunpla_list|length }} modelli</span>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 table-wing">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">JAN Code</th>
+                    <th scope="col">Nome Modello</th>
+                    <th scope="col">Grade</th>
+                    <th scope="col">Scala</th>
+                    <th scope="col">Prezzo</th>
+                    <th scope="col">Quantità</th>
+                    <th scope="col" class="text-end">Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gunpla in gunpla_list %}
+                <tr>
+                    <td><strong>#{{ gunpla.id_gunpla }}</strong></td>
+                    <td><code class="text-dark">{{ gunpla.jan }}</code></td>
+                    <td class="fw-semibold">{{ gunpla.nome_modello }}</td>
+                    <td>
+                        <span class="badge bg-dark text-uppercase">{{ gunpla.tipologia }}</span>
+                    </td>
+                    <td><span class="badge bg-light text-dark border">{{ gunpla.scala }}</span></td>
+                    <td class="fw-bold text-success">&euro; {{ "%.2f"|format(gunpla.prezzo) }}</td>
+                    <td>
+                        {% if gunpla.quantita == 0 %}
+                            <span class="badge bg-danger">Esaurito</span>
+                        {% elif gunpla.quantita <= 2 %}
+                            <span class="badge bg-warning text-dark">{{ gunpla.quantita }} in stock</span>
+                        {% else %}
+                            <span class="badge bg-info text-dark">{{ gunpla.quantita }} pz</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-outline-secondary" title="Modifica"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-outline-danger" title="Elimina"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        Nessun Gunpla presente nel database.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

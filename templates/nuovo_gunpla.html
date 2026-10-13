@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Nuovo Model Kit | Wing Zero ERP{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h2 class="fw-bold mb-0 text-dark">Inserisci Nuovo Model Kit</h2>
+                <p class="text-muted small mb-0">Aggiungi un nuovo Gunpla al database del magazzino</p>
+            </div>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Torna alla Dashboard
+            </a>
+        </div>
+
+        <div class="card card-wing shadow-sm">
+            <div class="card-body p-4">
+                <form action="{{ url_for('nuovo_gunpla') }}" method="POST">
+                    
+                    <div class="row g-3">
+                        <!-- Codice JAN -->
+                        <div class="col-md-6">
+                            <label for="jan" class="form-label fw-semibold">Codice JAN (13 cifre) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="jan" name="jan" placeholder="Es. 4573102615053" required>
+                        </div>
+
+                        <!-- Nome Modello -->
+                        <div class="col-md-6">
+                            <label for="nome_modello" class="form-label fw-semibold">Nome Modello <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nome_modello" name="nome_modello" placeholder="Es. Wing Gundam Zero EW" required>
+                        </div>
+
+                        <!-- Tipologia / Grade -->
+                        <div class="col-md-4">
+                            <label for="tipologia" class="form-label fw-semibold">Grade / Tipologia <span class="text-danger">*</span></label>
+                            <select class="form-select" id="tipologia" name="tipologia" required>
+                                <option value="" selected disabled>Seleziona Grade...</option>
+                                <option value="EG">EG (Entry Grade)</option>
+                                <option value="HG">HG (High Grade)</option>
+                                <option value="RG">RG (Real Grade)</option>
+                                <option value="MG">MG (Master Grade)</option>
+                                <option value="PG">PG (Perfect Grade)</option>
+                                <option value="SD">SD (Super Deformed)</option>
+                            </select>
+                        </div>
+
+                        <!-- Scala -->
+                        <div class="col-md-4">
+                            <label for="scala" class="form-label fw-semibold">Scala</label>
+                            <select class="form-select" id="scala" name="scala">
+                                <option value="1/144">1/144</option>
+                                <option value="1/100">1/100</option>
+                                <option value="1/60">1/60</option>
+                                <option value="Non in scala">Non in scala</option>
+                            </select>
+                        </div>
+
+                        <!-- Edizione -->
+                        <div class="col-md-4">
+                            <label for="edizione" class="form-label fw-semibold">Edizione</label>
+                            <input type="text" class="form-control" id="edizione" name="edizione" placeholder="Standard, Premium Bandai..." value="Standard">
+                        </div>
+
+                        <!-- Prezzo -->
+                        <div class="col-md-6">
+                            <label for="prezzo" class="form-label fw-semibold">Prezzo (&euro;) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">&euro;</span>
+                                <input type="number" step="0.01" class="form-control" id="prezzo" name="prezzo" placeholder="0.00" required>
+                            </div>
+                        </div>
+
+                        <!-- Quantità -->
+                        <div class="col-md-6">
+                            <label for="quantita" class="form-label fw-semibold">Quantità in Stock <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="quantita" name="quantita" value="1" min="0" required>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-light border px-4">Annulla</a>
+                        <button type="submit" class="btn btn-wing-primary px-4 fw-semibold">
+                            <i class="bi bi-check-lg me-1"></i> Salva Model Kit
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
