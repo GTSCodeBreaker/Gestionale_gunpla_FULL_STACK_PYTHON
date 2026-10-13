@@ -1,16 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Magazzino Gunpla | Wing Zero ERP{% endblock %}
-
 {% block content %}
-<!-- Titolo & Pulsante Inserimento -->
+<!-- Intestazione Dashboard Anaheim Electronics -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2 class="fw-bold mb-0 text-dark">Gestione Magazzino</h2>
-        <p class="text-muted small mb-0">Catalogo e giacenze dei Model Kit registrati nel database</p>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h2 class="fw-bold mb-0 text-dark">Controllo Magazzino</h2>
+            <span class="badge bg-dark rounded-pill">AE-OS v2.6 &bull; UC Logistics</span>
+        </div>
+        <p class="text-muted small mb-0">Sistema gestionale e di monitoraggio scorte Anaheim Electronics</p>
     </div>
-    <a href="{{ url_for('nuovo_gunpla') }}" class="btn btn-wing-primary px-3 py-2 fw-semibold">
-        <i class="bi bi-plus-lg me-1"></i> Nuovo Model Kit
+    <a href="{{ url_for('nuovo_gunpla') }}" class="btn btn-wing-primary px-3 py-2 fw-semibold shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> Registra Nuovo Kit
     </a>
 </div>
 
@@ -56,13 +57,58 @@
     </div>
 </div>
 
-<!-- Tabella Dati -->
+<!-- Card principale contenente la tabella e la barra di ricerca -->
 <div class="card card-wing shadow-sm">
-    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-task me-2 text-primary"></i>Elenco Gunpla</h5>
-        <span class="badge bg-secondary fs-6">{{ gunpla_list|length }} modelli</span>
+    <div class="card-header bg-white py-3 border-bottom">
+        <div class="row align-items-center g-2">
+            
+            <!-- Titolo e Contatore -->
+            <div class="col-md-5 d-flex align-items-center gap-2">
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-list-task me-2 text-primary"></i>Elenco Gunpla
+                </h5>
+                <span class="badge bg-secondary fs-6">{{ gunpla_list|length }} modelli</span>
+            </div>
+
+            <!-- Form di Ricerca e Filtraggio -->
+            <div class="col-md-7">
+                <form action="{{ url_for('dashboard') }}" method="GET">
+                    <div class="input-group input-group-sm">
+                        
+                        <!-- Menù a tendina (w-auto) -->
+                        <select name="criterio" id="criterioSelect" class="form-select bg-light fw-semibold w-auto">
+                            <option value="nome" {% if criterio == 'nome' %}selected{% endif %}>Nome Modello</option>
+                            <option value="jan" {% if criterio == 'jan' %}selected{% endif %}>JAN Code</option>
+                        </select>
+
+                        <!-- Box di testo con placeholder e tipo dinamici -->
+                        <input type="{% if criterio == 'jan' %}number{% else %}text{% endif %}" 
+                               id="searchInput"
+                               name="q" 
+                               class="form-control" 
+                               placeholder="{% if criterio == 'jan' %}Es. 4573102615053...{% else %}Cerca per nome del modello...{% endif %}" 
+                               value="{{ q if q else '' }}">
+
+                        <!-- Pulsante Cerca -->
+                        <button type="submit" class="btn btn-wing-primary px-3">
+                            <i class="bi bi-search me-1"></i> Cerca
+                        </button>
+
+                        <!-- Pulsante Reset (visibile se c'è una ricerca attiva) -->
+                        {% if q %}
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary" title="Annulla ricerca">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                        {% endif %}
+
+                    </div>
+                </form>
+            </div>
+
+        </div>
     </div>
-    
+
+    <!-- Tabella Dati -->
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 table-wing">
             <thead>
@@ -78,7 +124,6 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- INIZIO CICLO: la variabile 'gunpla' è disponibile soltanto QUI dentro -->
                 {% for gunpla in gunpla_list %}
                 <tr>
                     <td><strong>#{{ gunpla.id_gunpla }}</strong></td>
@@ -97,7 +142,6 @@
                         {% endif %}
                     </td>
                     <td class="text-end">
-                        <!-- Form aggiunta al carrello dentro il ciclo -->
                         {% if gunpla.quantita > 0 %}
                         <form action="{{ url_for('aggiungi_al_carrello', id_gunpla=gunpla.id_gunpla) }}" method="POST" class="d-inline-flex gap-1">
                             <input type="number" name="quantita" value="1" min="1" max="{{ gunpla.quantita }}" 
@@ -112,21 +156,45 @@
                         </button>
                         {% endif %}
 
-                        <div class="btn-group btn-group-sm ms-1" role="group">
-                            <button class="btn btn-outline-secondary" title="Modifica"><i class="bi bi-pencil"></i></button>
-                        </div>
+                        <a href="{{ url_for('modifica_gunpla', id_gunpla=gunpla.id_gunpla) }}" class="btn btn-sm btn-outline-secondary" title="Modifica">
+                            <i class="bi bi-pencil"></i>
+                        </a>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
                     <td colspan="8" class="text-center py-4 text-muted">
-                        Nessun Gunpla presente nel database.
+                        {% if q %}
+                            Nessun Model Kit trovato corrispondente alla ricerca <strong>"{{ q }}"</strong>.
+                        {% else %}
+                            Nessun Gunpla presente nel database.
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
-                <!-- FINE CICLO: oltre questo punto 'gunpla' non è più definita -->
             </tbody>
         </table>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const select = document.getElementById('criterioSelect');
+        const input = document.getElementById('searchInput');
+
+        function aggiornaInput() {
+            if (select.value === 'jan') {
+                input.placeholder = 'Es. 4573102615053...';
+                input.type = 'number';
+            } else {
+                input.placeholder = 'Cerca per nome del modello...';
+                input.type = 'text';
+            }
+        }
+
+        select.addEventListener('change', aggiornaInput);
+    });
+</script>
 {% endblock %}

@@ -1,41 +1,81 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-wing-zero shadow-sm">
     <div class="container">
+        <!-- Logo Ufficiale Anaheim Electronics -->
         <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('dashboard') }}">
-            <i class="bi bi-cpu-fill text-warning fs-4"></i>
-            <span class="fw-bold">WING ZERO</span> ERP
+            <img src="{{ url_for('static', filename='img/anaheim_logo.webp') }}" 
+                 alt="Anaheim Electronics Logo" 
+                 height="36" 
+                 class="d-inline-block align-text-top">
+            <div>
+                <span class="fw-bold text-uppercase">ANAHEIM ELECTRONICS</span>
+                <span class="badge bg-danger ms-1 align-text-top" style="font-size: 0.65rem;">AE-OS</span>
+            </div>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+
+        <!-- Toggler Mobile -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navMain">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link active" href="{{ url_for('dashboard') }}"><i class="bi bi-boxes me-1"></i> Magazzino</a>
+                
+                <!-- Menù a Cascata Sezioni AE-OS -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {% if request.endpoint in ['dashboard', 'visualizza_carrello'] %}active{% endif %}" 
+                       href="#" 
+                       id="gestionaleDropdown" 
+                       role="button" 
+                       data-bs-toggle="dropdown" 
+                       aria-expanded="false">
+                        <i class="bi bi-layers-fill me-1"></i> Sezioni AE-OS
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark shadow" aria-labelledby="gestionaleDropdown">
+                        <li>
+                            <a class="dropdown-item {% if request.endpoint == 'dashboard' %}active{% endif %}" 
+                               href="{{ url_for('dashboard') }}">
+                                <i class="bi bi-boxes me-2"></i> Magazzino Gunpla
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center justify-content-between {% if request.endpoint == 'visualizza_carrello' %}active{% endif %}" 
+                               href="{{ url_for('visualizza_carrello') }}">
+                                <span><i class="bi bi-cart3 me-2"></i> Carrello Spesa</span>
+                                {% if session.get('carrello') %}
+                                    <span class="badge rounded-pill bg-danger">
+                                        {{ session.get('carrello')|length }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                    </ul>
                 </li>
+
+                <!-- Pulsante Registra Kit -->
                 <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="bi bi-cart3 me-1"></i> Cassa & Vendite</a>
+                    <a class="nav-link {% if request.endpoint == 'nuovo_gunpla' %}active{% endif %}" href="{{ url_for('nuovo_gunpla') }}">
+                        <i class="bi bi-plus-circle me-1"></i> Registra Kit
+                    </a>
                 </li>
+
             </ul>
+
+            <!-- Info Store & Operatore GTS-CodeBreaker con Avatar Wing Zero -->
             <div class="d-flex align-items-center gap-3 text-light small">
-                <span><i class="bi bi-person-circle text-info me-1"></i> Operatore: <strong>Pilota Zero</strong></span>
+                <span class="text-white-50"><i class="bi bi-shop me-1 text-warning"></i> The Gunpla Guys</span>
+                
+                <span class="border-start ps-3 border-secondary d-flex align-items-center gap-2">
+                    <!-- Avatar Operatore (wing_zero.jpeg) -->
+                    <img src="{{ url_for('static', filename='img/wing_zero.jpeg') }}" 
+                         alt="Wing Zero Avatar" 
+                         height="28" 
+                         width="28" 
+                         class="rounded-circle border border-info object-fit-cover shadow-sm">
+                    
+                    <span>Operatore: <strong class="text-warning">GTS-CodeBreaker</strong></span>
+                </span>
             </div>
         </div>
     </div>
-</nav>
-
-<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-    <li class="nav-item">
-        <a class="nav-link active" href="{{ url_for('dashboard') }}"><i class="bi bi-boxes me-1"></i> Magazzino</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link position-relative" href="{{ url_for('visualizza_carrello') }}">
-            <i class="bi bi-cart3 me-1"></i> Carrello
-            {% if session.get('carrello') %}
-                <span class="badge rounded-pill bg-danger ms-1">
-                    {{ session.get('carrello')|length }}
-                </span>
-            {% endif %}
-        </a>
-    </li>
-</ul>
+</nav><title></title>

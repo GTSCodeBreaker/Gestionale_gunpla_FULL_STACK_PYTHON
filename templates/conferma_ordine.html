@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Ricevuta Vendita #{{ ricevuta.id_vendita }} | AE-OS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card card-wing card-wing-cyan shadow-lg p-4 bg-white">
+            
+            <!-- Header Ricevuta -->
+            <div class="text-center border-bottom pb-3 mb-3">
+                <img src="{{ url_for('static', filename='img/anaheim_logo.webp') }}" alt="Anaheim Logo" height="42" class="mb-2">
+                <h4 class="fw-bold text-dark mb-0">ANAHEIM ELECTRONICS</h4>
+                <small class="text-muted">Scontrino di Vendita #{{ ricevuta.id_vendita }} &bull; Store Verona</small>
+            </div>
+
+            <!-- Tabella Prodotti Acquistati -->
+            <table class="table table-sm align-middle mb-3">
+                <thead>
+                    <tr class="text-muted small">
+                        <th>Articolo</th>
+                        <th class="text-center">Q.tà</th>
+                        <th class="text-end">Prezzo</th>
+                        <th class="text-end">Totale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in ricevuta.articoli %}
+                    <tr>
+                        <td class="fw-semibold text-dark">{{ item.nome_modello }}</td>
+                        <td class="text-center">{{ item.quantita }}</td>
+                        <td class="text-end">&euro; {{ "%.2f"|format(item.prezzo) }}</td>
+                        <td class="text-end">&euro; {{ "%.2f"|format(item.prezzo * item.quantita) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <hr>
+
+            <!-- Totali e Sconti -->
+            <div class="vstack gap-1 text-dark">
+                <div class="d-flex justify-content-between small">
+                    <span>Totale Parziale:</span>
+                    <span>&euro; {{ "%.2f"|format(ricevuta.totale_lordo) }}</span>
+                </div>
+                {% if ricevuta.percentuale_sconto > 0 %}
+                <div class="d-flex justify-content-between text-danger small">
+                    <span>Sconto Applicato ({{ "%.1f"|format(ricevuta.percentuale_sconto) }}%):</span>
+                    <span>- &euro; {{ "%.2f"|format(ricevuta.valore_sconto) }}</span>
+                </div>
+                {% endif %}
+                <div class="d-flex justify-content-between fs-4 fw-bold text-success border-top pt-2 mt-1">
+                    <span>Totale Pagato:</span>
+                    <span>&euro; {{ "%.2f"|format(ricevuta.totale_netto) }}</span>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-grid gap-2 d-print-none">
+                <button onclick="window.print();" class="btn btn-outline-dark">
+                    <i class="bi bi-printer me-1"></i> Stampa Scontrino
+                </button>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-wing-primary fw-semibold">
+                    <i class="bi bi-house-door me-1"></i> Torna alla Dashboard
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

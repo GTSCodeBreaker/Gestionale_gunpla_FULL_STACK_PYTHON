@@ -42,26 +42,27 @@
         </div>
     </div>
 
-    <!-- Cassa & Totali -->
     <div class="col-lg-4">
-        <div class="card card-wing card-wing-gold shadow-sm p-4">
-            <h4 class="fw-bold mb-3">Riepilogo Ordine</h4>
-            <div class="d-flex justify-content-between my-2 fs-5">
-                <span>Totale Parziale:</span>
-                <strong class="text-primary">&euro; {{ "%.2f"|format(totale) }}</strong>
-            </div>
-            <hr>
-            <div class="d-grid gap-2 mt-3">
-                <button class="btn btn-success btn-lg fw-semibold">
-                    <i class="bi bi-cash-stack me-1"></i> Vai alla Cassa
-                </button>
-                <form action="{{ url_for('svuota_carrello') }}" method="POST" class="d-grid">
-                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-trash me-1"></i> Svuota Carrello
-                    </button>
-                </form>
-            </div>
+    <div class="card card-wing card-wing-gold shadow-sm p-4">
+        <h4 class="fw-bold mb-3">Riepilogo Ordine</h4>
+        <div class="d-flex justify-content-between my-2 fs-5">
+            <span>Totale Parziale:</span>
+            <strong class="text-primary">&euro; {{ "%.2f"|format(totale) }}</strong>
         </div>
+        <hr>
+        <div class="d-grid gap-2 mt-3">
+            <!-- Collegamento alla nuova pagina di cassa -->
+            <a href="{{ url_for('cassa') }}" class="btn btn-success btn-lg fw-semibold">
+                <i class="bi bi-cash-stack me-1"></i> Procedi alla Cassa
+            </a>
+            <form action="{{ url_for('svuota_carrello') }}" method="POST" class="d-grid">
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-trash me-1"></i> Svuota Carrello
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
     </div>
 </div>
 {% else %}
