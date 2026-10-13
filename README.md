@@ -10,7 +10,7 @@ Il progetto è strutturato separando la gestione del database relazionale, le qu
 
 * **1. `gunplaDB`**: Lo schema del database relazionale MySQL.
 * **2. `database.py`**: Il modulo repository / Data Access Layer per l'interazione con MySQL.
-* **3. `app.py`**: L'applicazione web Flask che gestisce la logica delle route, il filtraggio dei dati e le pagine del frontend.
+* **3. `app.py`**: L'applicazione web Flask che gestisce la logica delle route, il filtraggio dei dati, la personalizzazione dei temi e le pagine del frontend.
 * **extra. `popolareDB.py`**: Uno script di utilità eseguito per il popolamento iniziale del database.
 
 ---
@@ -48,7 +48,21 @@ Il file `app.py` costituisce il cuore dell'applicazione web sviluppata con il fr
   * Supporta la ricerca dinamica dell'inventario permettendo di filtrare per nome modello o per codice JAN.
   * Calcola i principali indicatori KPI (totale pezzi in magazzino, valore economico totale del magazzino e conteggio delle scorte critiche con quantità $\le 2$).
 * **Inserimento nuovo Gunpla (`/gunpla/nuovo`)**: Gestisce il form di inserimento dei nuovi modellini appoggiandosi alla funzione `registrazione_gunpla()`.
-* **Gestione Templating**: Interagisce con i file HTML nella cartella `templates/` mediante il motore Jinja2 per la resa dinamica dei dati a schermo.
+* **Gestione Templating e Temi Grafici**:
+  * Interagisce con i file HTML nella cartella `templates/` mediante il motore Jinja2 per la resa dinamica dei dati a schermo.
+  * Permette di personalizzare l'aspetto visivo dell'interfaccia alternando temi cromatici ispirati alle fazioni e serie dell'universo Gundam (es. Anaheim Electronics / Wing Zero).
+
+---
+
+## 4. Easter Egg: Sblocco del Tema Segreto "Cometa Rossa" (Char Aznable)
+
+All'interno dell'interfaccia è nascosto uno speciale **Easter Egg** che consente di sbloccare il tema visivo esclusivo dedicato a **Char Aznable**, l'iconico pilota dell'Universal Century noto come la *Cometa Rossa*.
+
+### Indizi per lo sblocco (Hint):
+
+1. **Inseguendo la Cometa Rossa**: *"Un vero pilota non passa inosservato. Prova a cercare nel sistema il nome dell'asso di Zeon o la sua celebre identità..."*
+2. **Tre Volte Più Veloce**: *"Si dice che i suoi Mobile Suit si muovano a velocità tripla. Presta attenzione ai codici o ai modelli iconici legati al suo nome (come MS-06S o MSN-04 Sazabi)..."*
+3. **Protocollo AE-OS**: *"Fai attenzione agli elementi interattivi nella barra di navigazione o nell'area di selezione del tema: un'interazione particolare potrebbe attivare la modalità Cometa Rossa!"*
 
 ---
 
@@ -106,3 +120,9 @@ Avviare il server di sviluppo Flask:
 flask --app app run --debug
 ```
 L'applicazione sarà visibile nel browser all'indirizzo `http://127.0.0.1:5000`.
+
+---
+
+## Licenza
+
+Questo progetto è distribuito sotto **Licenza MIT**.
