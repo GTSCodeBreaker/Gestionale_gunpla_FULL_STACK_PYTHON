@@ -48,3 +48,22 @@ body {
     background-color: var(--gz-blue-dark);
     color: #ffffff;
 }
+
+
+/* Tema speciale Char Aznable */
+body.char-theme {
+    background-color: #fdf2f2 !important;
+}
+
+body.char-theme .bg-wing-zero {
+    background-color: #8b0000 !important;
+    border-bottom-color: #ff4500 !important;
+}
+
+body.char-theme .btn-wing-primary {
+    background-color: #d32f2f !important;
+}
+
+body.char-theme .card-wing {
+    border-top-color: #d32f2f !important;
+}
