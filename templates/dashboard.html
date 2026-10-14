@@ -18,7 +18,7 @@
 <!-- Schede KPI / Statistiche -->
 <div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="card card-wing card-wing-cyan p-3 shadow-sm">
+        <div class="card card-wing card-wing-cyan p-3 shadow-sm h-100">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
                     <span class="text-muted small fw-bold text-uppercase">Totale Pezzi in Stock</span>
@@ -31,7 +31,7 @@
     </div>
 
     <div class="col-md-4">
-        <div class="card card-wing card-wing-gold p-3 shadow-sm">
+        <div class="card card-wing card-wing-gold p-3 shadow-sm h-100">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
                     <span class="text-muted small fw-bold text-uppercase">Valore Magazzino</span>
@@ -44,77 +44,110 @@
     </div>
 
     <div class="col-md-4">
-        <div class="card card-wing card-wing-red p-3 shadow-sm">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-muted small fw-bold text-uppercase">Scorte Critiche</span>
-                    <h3 class="fw-bold my-1 text-danger">{{ scorte_critiche }}</h3>
-                    <span class="text-danger small"><i class="bi bi-exclamation-triangle"></i> &le; 2 unità rimaste</span>
+        <a href="{{ url_for('dashboard', solo_critici='true') }}" class="text-decoration-none">
+            <div class="card card-wing card-wing-red p-3 shadow-sm h-100" style="cursor: pointer;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small fw-bold text-uppercase">Scorte Critiche</span>
+                        <h3 class="fw-bold my-1 text-danger">{{ scorte_critiche }}</h3>
+                        <span class="text-danger small">
+                            <i class="bi bi-exclamation-triangle"></i> &le; 2 unità rimaste
+                        </span>
+                    </div>
+                    <div class="fs-1 text-danger opacity-75">
+                        <i class="bi bi-shield-exclamation"></i>
+                    </div>
                 </div>
-                <div class="fs-1 text-danger opacity-75"><i class="bi bi-shield-exclamation"></i></div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
+
+<!-- Avviso Filtro Scorte Critiche Attivo -->
+{% if solo_critici %}
+<div class="alert alert-warning d-flex align-items-center justify-content-between mb-4 shadow-sm" role="alert">
+    <div>
+        <i class="bi bi-filter-circle-fill me-2 fs-5"></i>
+        Stai visualizzando unicamente i prodotti in <strong>Scorta Critica (&le; 2 pz)</strong>.
+    </div>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-dark fw-semibold">
+        <i class="bi bi-x-circle me-1"></i> Mostra tutti i prodotti
+    </a>
+</div>
+{% endif %}
 
 <!-- Card principale contenente la tabella e la barra di ricerca -->
 <div class="card card-wing shadow-sm">
     <div class="card-header bg-white py-3 border-bottom">
-        <div class="row align-items-center g-2">
-            
-            <!-- Titolo e Contatore -->
-            <div class="col-md-5 d-flex align-items-center gap-2">
-                <h5 class="fw-bold mb-0 text-dark">
-                    <i class="bi bi-list-task me-2 text-primary"></i>Elenco Gunpla
-                </h5>
-                <span class="badge bg-secondary fs-6">{{ gunpla_list|length }} modelli</span>
-            </div>
+        <form action="{{ url_for('dashboard') }}" method="GET" id="filterForm">
+            {% if solo_critici %}
+            <input type="hidden" name="solo_critici" value="true">
+            {% endif %}
 
-            <!-- Form di Ricerca e Filtraggio -->
-            <div class="col-md-7">
-                <form action="{{ url_for('dashboard') }}" method="GET">
+            <div class="row align-items-center g-3">
+                <!-- Titolo e Contatore -->
+                <div class="col-lg-3 col-md-4 d-flex align-items-center gap-2">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-list-task me-2 text-primary"></i>Elenco Gunpla
+                    </h5>
+                    <span class="badge bg-secondary fs-6">{{ gunpla_list|length }} modelli</span>
+                </div>
+
+                <!-- Campo Cerca per Nome / JAN Code -->
+                <div class="col-lg-4 col-md-8">
                     <div class="input-group input-group-sm">
-                        
-                        <!-- Menù a tendina (w-auto) -->
                         <select name="criterio" id="criterioSelect" class="form-select bg-light fw-semibold w-auto">
                             <option value="nome" {% if criterio == 'nome' %}selected{% endif %}>Nome Modello</option>
                             <option value="jan" {% if criterio == 'jan' %}selected{% endif %}>JAN Code</option>
                         </select>
-
-                        <!-- Box di testo con placeholder e tipo dinamici -->
-                        <input type="{% if criterio == 'jan' %}number{% else %}text{% endif %}" 
+                        <input type="{% if criterio == 'jan' %}number{% else %}text{% endif %}"
                                id="searchInput"
-                               name="q" 
-                               class="form-control" 
-                               placeholder="{% if criterio == 'jan' %}Es. 4573102615053...{% else %}Cerca per nome del modello...{% endif %}" 
+                               name="q"
+                               class="form-control"
+                               placeholder="{% if criterio == 'jan' %}Es. 4573102615053...{% else %}Cerca per nome...{% endif %}"
                                value="{{ q if q else '' }}">
-
-                        <!-- Pulsante Cerca -->
-                        <button type="submit" class="btn btn-wing-primary px-3">
-                            <i class="bi bi-search me-1"></i> Cerca
+                        <button type="submit" class="btn btn-wing-primary">
+                            <i class="bi bi-search"></i>
                         </button>
+                    </div>
+                </div>
 
-                        <!-- Pulsante Reset (visibile se c'è una ricerca attiva) -->
-                        {% if q %}
-                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary" title="Annulla ricerca">
-                            <i class="bi bi-x-lg"></i>
+                <!-- Filtro a Pillole/Badge per Grade -->
+                <div class="col-lg-5 col-md-12 text-lg-end">
+                    <div class="d-inline-flex flex-wrap align-items-center gap-1">
+                        <span class="small fw-bold text-muted me-1">Filtra Grade:</span>
+
+                        {% set tutti_i_grade = ['EG', 'HG', 'RG', 'MG', 'PG', 'SD'] %}
+                        {% for g_code in tutti_i_grade %}
+                            <input type="checkbox" 
+                                   class="btn-check" 
+                                   name="grade" 
+                                   value="{{ g_code }}" 
+                                   id="grade_{{ g_code }}"
+                                   {% if grades_selezionati and g_code in grades_selezionati %}checked{% endif %}
+                                   onchange="document.getElementById('filterForm').submit();">
+                            <label class="btn btn-sm btn-outline-dark rounded-pill fw-semibold" for="grade_{{ g_code }}">
+                                {{ g_code }}
+                            </label>
+                        {% endfor %}
+
+                        <!-- Pulsante Reset Filtri -->
+                        {% if q or grades_selezionati or solo_critici %}
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-link text-danger text-decoration-none ms-2" title="Azzera tutti i filtri">
+                            <i class="bi bi-x-circle-fill"></i> Azzera
                         </a>
                         {% endif %}
-
                     </div>
-                </form>
+                </div>
             </div>
-
-        </div>
+        </form>
     </div>
 
-    <!-- Tabella Dati -->
+    <!-- Tabella Dati (Senza ID e JAN Code) -->
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 table-wing">
             <thead>
                 <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">JAN Code</th>
                     <th scope="col">Nome Modello</th>
                     <th scope="col">Grade</th>
                     <th scope="col">Scala</th>
@@ -126,26 +159,23 @@
             <tbody>
                 {% for gunpla in gunpla_list %}
                 <tr>
-                    <td><strong>#{{ gunpla.id_gunpla }}</strong></td>
-                    <td><code class="text-dark">{{ gunpla.jan }}</code></td>
                     <td class="fw-semibold">{{ gunpla.nome_modello }}</td>
                     <td><span class="badge bg-dark text-uppercase">{{ gunpla.tipologia }}</span></td>
                     <td><span class="badge bg-light text-dark border">{{ gunpla.scala }}</span></td>
                     <td class="fw-bold text-success">&euro; {{ "%.2f"|format(gunpla.prezzo) }}</td>
                     <td>
                         {% if gunpla.quantita == 0 %}
-                            <span class="badge bg-danger">Esaurito</span>
+                        <span class="badge bg-danger">Esaurito</span>
                         {% elif gunpla.quantita <= 2 %}
-                            <span class="badge bg-warning text-dark">{{ gunpla.quantita }} in stock</span>
+                        <span class="badge bg-warning text-dark">{{ gunpla.quantita }} in stock</span>
                         {% else %}
-                            <span class="badge bg-info text-dark">{{ gunpla.quantita }} pz</span>
+                        <span class="badge bg-info text-dark">{{ gunpla.quantita }} pz</span>
                         {% endif %}
                     </td>
                     <td class="text-end">
                         {% if gunpla.quantita > 0 %}
                         <form action="{{ url_for('aggiungi_al_carrello', id_gunpla=gunpla.id_gunpla) }}" method="POST" class="d-inline-flex gap-1">
-                            <input type="number" name="quantita" value="1" min="1" max="{{ gunpla.quantita }}" 
-                                   class="form-control form-control-sm text-center" style="width: 60px;">
+                            <input type="number" name="quantita" value="1" min="1" max="{{ gunpla.quantita }}" class="form-control form-control-sm text-center" style="width: 60px;">
                             <button type="submit" class="btn btn-sm btn-wing-primary" title="Aggiungi al carrello">
                                 <i class="bi bi-cart-plus-fill"></i>
                             </button>
@@ -163,11 +193,11 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="8" class="text-center py-4 text-muted">
+                    <td colspan="6" class="text-center py-4 text-muted">
                         {% if q %}
-                            Nessun Model Kit trovato corrispondente alla ricerca <strong>"{{ q }}"</strong>.
+                        Nessun Model Kit trovato corrispondente alla ricerca <strong>"{{ q }}"</strong>.
                         {% else %}
-                            Nessun Gunpla presente nel database.
+                        Nessun Gunpla presente nel database.
                         {% endif %}
                     </td>
                 </tr>
@@ -181,42 +211,38 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Gestione dinamica input di ricerca
-    const select = document.getElementById('criterioSelect');
-    const input = document.getElementById('searchInput');
+    // 1. Gestione dinamica input ricerca (Nome / JAN Code)
+    const selectCriterio = document.getElementById('criterioSelect');
+    const inputSearch = document.getElementById('searchInput');
 
-    function aggiornaInput() {
-        if (select && select.value === 'jan') {
-            input.placeholder = 'Es. 4573102615053...';
-            input.type = 'number';
-        } else if (input) {
-            input.placeholder = 'Cerca per nome del modello...';
-            input.type = 'text';
-        }
-    }
-    if (select) {
-        select.addEventListener('change', aggiornaInput);
+    if (selectCriterio && inputSearch) {
+        selectCriterio.addEventListener('change', function() {
+            if (this.value === 'jan') {
+                inputSearch.placeholder = 'Es. 4573102615053...';
+                inputSearch.type = 'number';
+            } else {
+                inputSearch.placeholder = 'Cerca per nome...';
+                inputSearch.type = 'text';
+            }
+        });
     }
 
-    // 2. Sblocco Easter Egg Char Aznable
+    // 2. Easter Egg Char Aznable
     const urlParams = new URLSearchParams(window.location.search);
     const query = (urlParams.get('q') || '').toLowerCase().trim();
 
     if (query === 'char' || query === 'char aznable') {
-        // Salva lo sblocco permanente nel localStorage
         localStorage.setItem('charUnlocked', 'true');
         localStorage.setItem('selectedMsTheme', 'char');
 
-        // Aggiorna lo stato del menu e applica i colori
         if (typeof checkCharUnlockState === 'function') checkCharUnlockState();
         if (typeof applyThemeVariables === 'function') applyThemeVariables('char');
 
-        if (input) {
-            input.style.borderColor = '#d32f2f';
-            input.style.boxShadow = '0 0 12px rgba(211, 47, 47, 0.6)';
+        if (inputSearch) {
+            inputSearch.style.borderColor = '#d32f2f';
+            inputSearch.style.boxShadow = '0 0 12px rgba(211, 47, 47, 0.6)';
         }
 
-        // Riproduzione soundtrack
         const charAudio = new Audio("{{ url_for('static', filename='audio/Sassotaru_Char.mp3') }}");
         charAudio.volume = 0.6;
 

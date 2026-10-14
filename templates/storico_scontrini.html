@@ -60,12 +60,14 @@
 </div>
 
 <!-- Tabella Storico Scontrini -->
+<!-- Tabella Storico Scontrini -->
 <div class="card card-wing shadow-sm">
     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-receipt-cutoff me-2 text-primary"></i>Registro Transazioni</h5>
+        <h5 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-receipt-cutoff me-2 text-primary"></i>Registro Transazioni
+        </h5>
         <span class="badge bg-secondary fs-6">{{ vendite|length }} scontrini</span>
     </div>
-
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 table-wing">
             <thead>
@@ -73,17 +75,15 @@
                     <th scope="col"># ID</th>
                     <th scope="col">Data e Ora</th>
                     <th scope="col">Articoli Acquistati</th>
-                    <th scope="col">Totale Netto</th>
-                    <th scope="col" class="text-end">Azione</th>
+                    <th scope="col">Totale Vendita</th>
+                    <th scope="col" class="text-end">Azioni</th>
                 </tr>
             </thead>
             <tbody>
                 {% for v in vendite %}
                 <tr>
-                    <td><strong>#VND-{{ v.id_vendita }}</strong></td>
-                    <td class="small text-muted">
-                        <i class="bi bi-calendar3 me-1"></i> {{ v.data_vendita.strftime('%d/%m/%Y - %H:%M') if v.data_vendita else 'N/D' }}
-                    </td>
+                    <td class="fw-bold">#{{ v.id_vendita }}</td>
+                    <td>{{ v.data_vendita }}</td>
                     <td>
                         <div class="vstack gap-1">
                             {% for art in v.articoli %}
@@ -97,15 +97,64 @@
                     </td>
                     <td class="fw-bold text-success fs-6">&euro; {{ "%.2f"|format(v.totale_vendita) }}</td>
                     <td class="text-end">
-                        <a href="{{ url_for('dettaglio_scontrino', id_vendita=v.id_vendita) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-printer me-1"></i> Ristampa
-                        </a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="5" class="text-center py-4 text-muted">
-                        Nessuna vendita presente nel registro.
+                        <div class="btn-group gap-1">
+                            <!-- Pulsante Ulteriori Dettagli (Apre il Modal) -->
+                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalDettaglio{{ v.id_vendita }}">
+                                <i class="bi bi-eye me-1"></i> Dettagli
+                            </button>
+                            
+                            <!-- Pulsante Ristampa (Reindirizza alla ricevuta/conferma_ordine) -->
+                            <a href="{{ url_for('dettaglio_scontrino', id_vendita=v.id_vendita) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-printer me-1"></i> Ristampa
+                            </a>
+                        </div>
+
+                        <!-- MODAL DETTAGLI SCONTRINO -->
+                        <div class="modal fade text-start" id="modalDettaglio{{ v.id_vendita }}" tabindex="-1" aria-labelledby="labelModal{{ v.id_vendita }}" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-light">
+                                        <h5 class="modal-title fw-bold text-dark" id="labelModal{{ v.id_vendita }}">
+                                            <i class="bi bi-receipt me-2 text-primary"></i>Dettaglio Scontrino #{{ v.id_vendita }}
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3 text-muted small border-bottom pb-2">
+                                            <strong>Data operazione:</strong> {{ v.data_vendita }}
+                                        </div>
+
+                                        <h6 class="fw-bold mb-2">Articoli In Scontrino:</h6>
+                                        <ul class="list-group list-group-flush mb-3">
+                                            {% for art in v.articoli %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <div>
+                                                    <strong class="text-dark">{{ art.nome_modello }}</strong>
+                                                    <div class="small text-muted">JAN: {{ art.jan }}</div>
+                                                    <div class="small text-muted">Quantità: {{ art.quantita_venduta }} x &euro; {{ "%.2f"|format(art.prezzo_al_pezzo) }}</div>
+                                                </div>
+                                                <span class="fw-bold text-dark">
+                                                    &euro; {{ "%.2f"|format(art.quantita_venduta * art.prezzo_al_pezzo) }}
+                                                </span>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+
+                                        <div class="d-flex justify-content-between align-items-center pt-2 border-top fs-5">
+                                            <span class="fw-bold">Totale Complessivo:</span>
+                                            <strong class="text-success">&euro; {{ "%.2f"|format(v.totale_vendita) }}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Chiudi</button>
+                                        <a href="{{ url_for('dettaglio_scontrino', id_vendita=v.id_vendita) }}" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-printer me-1"></i> Stampa Ricevuta
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- FINE MODAL -->
                     </td>
                 </tr>
                 {% endfor %}

@@ -1,6 +1,11 @@
 import os
+from re import I
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from dotenv import load_dotenv
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 # Importazione delle funzioni repository dal modulo database.py
 from database import (
@@ -8,6 +13,7 @@ from database import (
     ricerca_model_kit_nome,
     ricerca_model_kit_jan,
     registrazione_gunpla,
+    aggiorna_gunpla,
     aggiornamento_quantita_gunplas,
     registra_vendita,
     ottieni_storico_vendite,     
@@ -26,52 +32,46 @@ app.secret_key = os.getenv("SECRET_KEY", "wing_zero_secret_key_2026")
 @app.route("/")
 @app.route("/dashboard")
 def dashboard():
-    """Route principale con supporto a ricerca e filtraggio dinamico."""
-    # Lettura dei parametri inviati dalla query string (form GET)
+    """Route della dashboard con ricerca per testo e filtro a pillole per Grade."""
     query_testo = request.args.get("q", "").strip()
     criterio = request.args.get("criterio", "nome")
+    grades_selezionati = request.args.getlist("grade")  # Es. ['HG', 'MG']
+    solo_critici = request.args.get("solo_critici", "false").lower() == "true"
 
-    # --- EASTER EGG CHAR AZNABLE ---
-    if query_testo.lower() in ["char", "char aznable"]:
-        flash("🔥 Red Comet detected! Performance increased by 3x!", "danger")
+    # 1. Recupero iniziale di tutti i prodotti
+    gunpla_list = ottieni_tutti_i_model_kit()
 
-    # Selezione della funzione di ricerca
+    # 2. Filtraggio per ricerca testuale (Nome o JAN)
     if query_testo:
         if criterio == "jan":
             gunpla_list = ricerca_model_kit_jan(query_testo)
         else:
             gunpla_list = ricerca_model_kit_nome(query_testo)
-    else:
-        gunpla_list = ottieni_tutti_i_model_kit()
 
+    # 3. Filtraggio per Grade / Tipologia (se selezionati)
+    if grades_selezionati:
+        gunpla_list = [g for g in gunpla_list if g.get("tipologia") in grades_selezionati]
 
-    
-    # Selezione della funzione di ricerca appropriata in base al criterio
-    if query_testo:
-        if criterio == "jan":
-            gunpla_list = ricerca_model_kit_jan(query_testo)
-        else:
-            gunpla_list = ricerca_model_kit_nome(query_testo)
-    else:
-        # Se non c'è ricerca, carica l'intero inventario
-        gunpla_list = ottieni_tutti_i_model_kit()
-    
-    # Calcolo delle statistiche KPI
+    # 4. Filtraggio per scorte critiche (se attivo)
+    if solo_critici:
+        gunpla_list = [item for item in gunpla_list if item["quantita"] <= 2]
+
+    # Statistiche KPI
     totale_pezzi = sum(item["quantita"] for item in gunpla_list)
     valore_magazzino = sum(float(item["prezzo"]) * item["quantita"] for item in gunpla_list)
     scorte_critiche = len([item for item in gunpla_list if item["quantita"] <= 2])
-    
+
     return render_template(
         "dashboard.html",
         gunpla_list=gunpla_list,
         totale_pezzi=totale_pezzi,
         valore_magazzino=valore_magazzino,
         scorte_critiche=scorte_critiche,
-        q=query_testo,       
-        criterio=criterio    
+        q=query_testo,
+        criterio=criterio,
+        grades_selezionati=grades_selezionati,
+        solo_critici=solo_critici
     )
-
-
 @app.route("/gunpla/nuovo", methods=["GET", "POST"])
 def nuovo_gunpla():
     """Gestione dell'inserimento tramite la funzione registrazione_gunpla()."""
@@ -112,47 +112,54 @@ def nuovo_gunpla():
 
 @app.route("/carrello/aggiungi/<int:id_gunpla>", methods=["POST"])
 def aggiungi_al_carrello(id_gunpla):
-    """Aggiunge un Gunpla al carrello cercandolo nella lista ricevuta da database.py."""
+    """Aggiunge un Gunpla al carrello verificando la disponibilità e gestendo gli errori in modo chiaro."""
     quantita_richiesta = request.form.get("quantita", type=int, default=1)
     
-    if quantita_richiesta <= 0:
-        flash("La quantità deve essere maggiore di zero!", "danger")
+    # 1. Validazione input negativo o nullo
+    if quantita_richiesta is None or quantita_richiesta <= 0:
+        flash("Seleziona una quantità valida (almeno 1 pezzo) da aggiungere al carrello.", "warning")
         return redirect(url_for("dashboard"))
-    
-    # Recupero dati usando le funzioni repository
+
+    # 2. Recupero del Gunpla dal database
     tutti_i_gunpla = ottieni_tutti_i_model_kit()
     gunpla = next((g for g in tutti_i_gunpla if g["id_gunpla"] == id_gunpla), None)
-    
+
     if not gunpla:
-        flash("Gunpla non trovato!", "danger")
+        flash("Il prodotto selezionato non è stato trovato a sistema o è stato rimosso.", "danger")
         return redirect(url_for("dashboard"))
-    
-    # Inizializza il carrello in sessione
+
+    # 3. Controllo Prodotto Esaurito
+    if gunpla["quantita"] == 0:
+        flash(f"Impossibile aggiungere '{gunpla['nome_modello']}': il prodotto è esaurito a magazzino.", "danger")
+        return redirect(url_for("dashboard"))
+
+    # 4. Calcolo quantità nel carrello ed eventuale superamento scorte
     if "carrello" not in session:
         session["carrello"] = {}
-
+    
     carrello = session["carrello"]
     id_str = str(id_gunpla)
-
     quantita_gia_nel_carrello = carrello.get(id_str, {}).get("quantita", 0)
     quantita_totale_richiesta = quantita_gia_nel_carrello + quantita_richiesta
 
-    # Verifica disponibilita
     if quantita_totale_richiesta > gunpla["quantita"]:
-        flash(f"Scorte insufficienti per {gunpla['nome_modello']}. Disponibili: {gunpla['quantita']}.", "warning")
+        disponibili_rimasti = gunpla["quantita"] - quantita_gia_nel_carrello
+        if disponibili_rimasti <= 0:
+            flash(f"Hai già aggiunto tutti i pezzi disponibili ({gunpla['quantita']} pz) di '{gunpla['nome_modello']}' nel carrello.", "warning")
+        else:
+            flash(f"Quantità non disponibile per '{gunpla['nome_modello']}'. Puoi aggiungerne al massimo altri {disponibili_rimasti} pz (scorta totale: {gunpla['quantita']} pz).", "warning")
         return redirect(url_for("dashboard"))
 
+    # 5. Inserimento con esito positivo
     carrello[id_str] = {
         "id_gunpla": gunpla["id_gunpla"],
         "nome_modello": gunpla["nome_modello"],
         "prezzo": float(gunpla["prezzo"]),
         "quantita": quantita_totale_richiesta
     }
-    
     session.modified = True
     flash(f"Aggiunto '{gunpla['nome_modello']}' (x{quantita_richiesta}) al carrello!", "success")
     return redirect(url_for("dashboard"))
-
 
 @app.route("/carrello")
 def visualizza_carrello():
@@ -174,7 +181,7 @@ def svuota_carrello():
 
 @app.route("/gunpla/modifica/<int:id_gunpla>", methods=["GET", "POST"])
 def modifica_gunpla(id_gunpla):
-    """Gestisce la modifica delle scorte consentendo di aumentare o diminuire la quantità."""
+    """Gestisce la modifica di prezzo e disponibilità del prodotto."""
     tutti_i_gunpla = ottieni_tutti_i_model_kit()
     gunpla = next((g for g in tutti_i_gunpla if g["id_gunpla"] == id_gunpla), None)
     
@@ -183,23 +190,30 @@ def modifica_gunpla(id_gunpla):
         return redirect(url_for("dashboard"))
 
     if request.method == "POST":
-        operazione = request.form.get("operazione", "aumenta")
-        quantita_input = request.form.get("quantita", type=int, default=0)
+        # Lettura dei valori inviati dal form
+        nuovo_prezzo = request.form.get("prezzo", type=float)
+        nuova_quantita = request.form.get("quantita", type=int)
 
-        if quantita_input <= 0:
-            flash("Inserisci una quantità valida maggiore di zero!", "warning")
-            return render_template("modifica_gunpla.html", gunpla=gunpla)
+        # Se il prezzo non viene inserito o è invalido, viene mantenuto il prezzo attuale
+        if nuovo_prezzo is None:
+            nuovo_prezzo = float(gunpla["prezzo"])
 
-        # Se l'operazione è "diminuisci", trasformiamo il valore in negativo
-        differenza = quantita_input if operazione == "aumenta" else -quantita_input
+        # Se la quantità non viene inserita, viene mantenuta la quantità attuale
+        if nuova_quantita is None:
+            nuova_quantita = gunpla["quantita"]
 
-        # Aggiorna le scorte usando la funzione repository
-        esito, messaggio = aggiornamento_quantita_gunplas(gunpla["jan"], differenza)
+        # Aggiornamento nel database tramite la funzione repository
+        esito, messaggio = aggiorna_gunpla(
+            jan=gunpla["jan"],
+            nuova_quantita=nuova_quantita,
+            nuovo_prezzo=nuovo_prezzo
+        )
+
         if esito:
             flash(messaggio, "success")
         else:
             flash(messaggio, "danger")
-            
+
         return redirect(url_for("dashboard"))
 
     return render_template("modifica_gunpla.html", gunpla=gunpla)
@@ -288,6 +302,31 @@ def dettaglio_scontrino(id_vendita):
         return redirect(url_for("storico_scontrini"))
         
     return render_template("conferma_ordine.html", ricevuta=ricevuta)
+
+
+@app.errorhandler(404)
+def pagina_non_trovata(e):
+    """Gestisce i link errati o le pagine non esistenti."""
+    flash("La pagina o la risorsa richiesta non è stata trovata.", "warning")
+    return redirect(url_for("dashboard"))
+
+@app.errorhandler(500)
+def errore_interno_server(e):
+    """Gestisce errori imprevisti del server senza mostrare dettagli tecnici."""
+    logger.exception("Si è verificato un errore interno non gestito.")
+    flash("Si è verificato un errore imprevisto nel sistema. L'operazione è stata annullata in sicurezza.", "danger")
+    return redirect(url_for("dashboard"))
+
+
+
+
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=8080)

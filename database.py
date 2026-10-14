@@ -3,8 +3,12 @@ import mysql.connector
 from mysql.connector import Error
 from dotenv import load_dotenv as caricaenv
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 caricaenv()
+
 
 configuratore={
     "host": os.getenv("MYSQL_HOST"),
@@ -19,61 +23,34 @@ configuratore={
 def _connessione_aperta():
     return mysql.connector.connect(**configuratore)
 
-def registrazione_gunpla(jan, nome_modello, tipologia, prezzo, edizione, quantita, scala, tipologia_specifica=None):
-    connessione=None
-    cursore=None
-
+def registrazione_gunpla(jan, nome_modello, tipologia, prezzo, edizione, quantita, scala):
+    """Registra un nuovo kit restituendo messaggi puliti per l'operatore."""
+    connessione = None
+    cursore = None
     try:
         connessione = _connessione_aperta()
         cursore = connessione.cursor()
-        query="""
-                INSERT INTO gunpla (jan, nome_modello, tipologia, prezzo, edizione, quantita, scala)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """
-        valori= (jan, nome_modello, tipologia, prezzo, edizione, quantita, scala)
-        cursore.execute(query,valori)
 
-
-        id_gunplas= cursore.lastrowid
-
-        riconoscimento_tipologia= tipologia.strip().upper()
-
-        if riconoscimento_tipologia== "EG":
-                query2 = "INSERT INTO eg_gunpla (id_gunpla) VALUES (%s)"
-                cursore.execute(query2, (id_gunplas,))
-
-        elif riconoscimento_tipologia== "SD":
-            query2 = "INSERT INTO sd_gunpla (id_gunpla, tipologia_sd) VALUES (%s, %s)"
-            cursore.execute(query2, (id_gunplas, tipologia_specifica))
-
-        elif riconoscimento_tipologia== "HG":
-            query2 = "INSERT INTO hg_gunpla (id_gunpla, tipologia_hg) VALUES (%s, %s)"
-            cursore.execute(query2, (id_gunplas, tipologia_specifica))
-
-        elif riconoscimento_tipologia== "RG":
-            query2 = "INSERT INTO rg_gunpla (id_gunpla) VALUES (%s)"
-            cursore.execute(query2, (id_gunplas,))
-
-        elif riconoscimento_tipologia== "MG":
-            query2 = "INSERT INTO mg_gunpla (id_gunpla, tipologia_mg) VALUES (%s, %s)"
-            cursore.execute(query2, (id_gunplas, tipologia_specifica))
-
-        elif riconoscimento_tipologia== "PG":
-            query2 = "INSERT INTO pg_gunpla (id_gunpla, tipologia_pg) VALUES (%s, %s)"
-            cursore.execute(query2, (id_gunplas, tipologia_specifica))
-
-        else:
-            print(f"Attenzione: tipologia '{tipologia}' non riconosciuta. Inserimento limitato alla tabella principale.")
-
+        query = """
+            INSERT INTO gunpla (jan, nome_modello, tipologia, prezzo, edizione, quantita, scala)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        cursore.execute(query, (jan, nome_modello, tipologia, prezzo, edizione, quantita, scala))
         connessione.commit()
-        
-        return True, id_gunplas
+        return True, "Model Kit registrato con successo nel sistema!"
 
-    except Error as errore:
+    except Error as errore_db:
         if connessione:
             connessione.rollback()
-        return False, str(errore)
-
+        # Registra il dettaglio tecnico nel file di log per chi fa manutenzione
+        logger.exception("Errore SQL durante la registrazione del Gunpla")
+        
+        # Gestione specifica violazione codice JAN duplicato (codice errore 1062)
+        if hasattr(errore_db, 'errno') and errore_db.errno == 1062:
+            return False, f"Impossibile registrare il kit: il codice JAN '{jan}' è già assegnato a un altro prodotto."
+        
+        return False, "Si è verificato un problema di connessione al database. Riprova più tardi o contatta l'assistenza."
+        
     finally:
         if cursore:
             cursore.close()
@@ -450,6 +427,43 @@ def ottieni_dettaglio_vendita(id_vendita):
         print(f"Errore durante il recupero dello scontrino #{id_vendita}: {errore}")
         return None
 
+    finally:
+        if cursore:
+            cursore.close()
+        if connessione and connessione.is_connected():
+            connessione.close()
+
+def aggiorna_gunpla(jan, nuova_quantita=None, nuovo_prezzo=None):
+    """Aggiorna la quantità e/o il prezzo di un Gunpla tramite il codice JAN."""
+    connessione = None
+    cursore = None
+    try:
+        connessione = _connessione_aperta()
+        cursore = connessione.cursor(dictionary=True)
+
+        # 1. Recupera il Gunpla esistente
+        query_ricerca = "SELECT id_gunpla, nome_modello, prezzo, quantita FROM gunpla WHERE jan = %s"
+        cursore.execute(query_ricerca, (str(jan).strip(),))
+        gunpla = cursore.fetchone()
+
+        if not gunpla:
+            return False, f"Nessun Gunpla trovato con codice JAN {jan}."
+
+        # 2. Se i dati inviati sono None, conserva i valori attuali presenti nel database
+        prezzo_finale = nuovo_prezzo if nuovo_prezzo is not None else gunpla["prezzo"]
+        quantita_finale = nuova_quantita if nuova_quantita is not None else gunpla["quantita"]
+
+        # 3. Esegue l'aggiornamento SQL
+        query_update = "UPDATE gunpla SET prezzo = %s, quantita = %s WHERE jan = %s"
+        cursore.execute(query_update, (prezzo_finale, quantita_finale, str(jan).strip()))
+        connessione.commit()
+
+        return True, f"Model Kit '{gunpla['nome_modello']}' aggiornato con successo!"
+
+    except Error as errore:
+        if connessione:
+            connessione.rollback()
+        return False, f"Errore del database: {errore}"
     finally:
         if cursore:
             cursore.close()

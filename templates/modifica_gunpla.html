@@ -5,31 +5,27 @@
 <div class="row justify-content-center">
     <div class="col-lg-6">
         <div class="d-flex align-items-center justify-content-between mb-4">
-            <h2 class="fw-bold mb-0">Modifica Scorte Gunpla #{{ gunpla.id_gunpla }}</h2>
+            <h2 class="fw-bold mb-0">Modifica Gunpla #{{ gunpla.id_gunpla }}</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">Annulla</a>
         </div>
-
-        <div class="card p-4 shadow-sm">
-            <p class="mb-1"><strong>Modello:</strong> {{ gunpla.nome_modello }}</p>
-            <p class="mb-3"><strong>Giacenza Attuale:</strong> <span class="badge bg-info text-dark fs-6">{{ gunpla.quantita }} pz</span></p>
-
-            <form method="POST" action="{{ url_for('modifica_gunpla', id_gunpla=gunpla.id_gunpla) }}">
-                <div class="row g-3">
-                    <!-- Selezione dell'operazione -->
+        <div class="card card-wing p-4 shadow-sm">
+            <form action="{{ url_for('modifica_gunpla', id_gunpla=gunpla.id_gunpla) }}" method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nome Modello</label>
+                    <input type="text" class="form-control" value="{{ gunpla.nome_modello }}" disabled readonly>
+                </div>
+                <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label for="operazione" class="form-label fw-semibold">Azione</label>
-                        <select name="operazione" id="operazione" class="form-select" required>
-                            <option value="aumenta" selected>Aumenta scorte (+)</option>
-                            <option value="diminuisci">Diminuisci scorte (-)</option>
-                        </select>
+                        <label class="form-label fw-semibold">Prezzo (&euro;)</label>
+                        <!-- Input prezzo precompilato con il valore attuale -->
+                        <input type="number" step="0.01" min="0" name="prezzo" class="form-control" value="{{ gunpla.prezzo }}" required>
                     </div>
-
-                    <!-- Quantità da variare -->
                     <div class="col-md-6">
-                        <label for="quantita" class="form-label fw-semibold">Quantità</label>
-                        <input type="number" name="quantita" id="quantita" class="form-control" min="1" value="1" required>
+                        <label class="form-label fw-semibold">Quantità in Stock</label>
+                        <!-- Input quantità precompilato con la disponibilità attuale -->
+                        <input type="number" min="0" name="quantita" class="form-control" value="{{ gunpla.quantita }}" required>
                     </div>
                 </div>
-
                 <div class="d-grid mt-4">
                     <button type="submit" class="btn btn-wing-primary fw-semibold">
                         <i class="bi bi-save me-1"></i> Salva Modifiche
