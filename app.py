@@ -178,6 +178,23 @@ def svuota_carrello():
     flash("Carrello svuotato con successo.", "info")
     return redirect(url_for("visualizza_carrello"))
 
+@app.route("/carrello/rimuovi/<int:id_gunpla>", methods=["POST"])
+def rimuovi_dal_carrello(id_gunpla):
+    """Rimuove un singolo articolo dal carrello presente in sessione."""
+    carrello = session.get("carrello", {})
+    id_str = str(id_gunpla)
+
+    if id_str in carrello:
+        nome_prodotto = carrello[id_str].get("nome_modello", "Prodotto")
+        # Rimuove l'elemento dal dizionario in sessione
+        carrello.pop(id_str, None)
+        session["carrello"] = carrello
+        session.modified = True
+        flash(f"'{nome_prodotto}' è stato rimosso dal carrello.", "info")
+    else:
+        flash("L'articolo selezionato non è presente nel carrello.", "warning")
+
+    return redirect(url_for("visualizza_carrello"))
 
 @app.route("/gunpla/modifica/<int:id_gunpla>", methods=["GET", "POST"])
 def modifica_gunpla(id_gunpla):

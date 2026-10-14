@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 
-{% block title %}Carrello Acquisti | Wing Zero ERP{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -25,6 +24,7 @@
                             <th>Prezzo cad.</th>
                             <th>Quantità</th>
                             <th>Subtotale</th>
+                            <th class="text-end">Azione</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -32,8 +32,18 @@
                         <tr>
                             <td class="fw-semibold">{{ item.nome_modello }}</td>
                             <td>&euro; {{ "%.2f"|format(item.prezzo) }}</td>
-                            <td><span class="badge bg-light text-dark border fs-6">{{ item.quantita }}</span></td>
+                            <td>
+                                <span class="badge bg-light text-dark border fs-6">{{ item.quantita }}</span>
+                            </td>
                             <td class="fw-bold text-success">&euro; {{ "%.2f"|format(item.prezzo * item.quantita) }}</td>
+                            <td class="text-end">
+                                <!-- Pulsante per eliminare il singolo elemento -->
+                                <form action="{{ url_for('rimuovi_dal_carrello', id_gunpla=item.id_gunpla) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Rimuovi dal carrello">
+                                        <i class="bi bi-trash"></i> Rimuovi
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -43,26 +53,24 @@
     </div>
 
     <div class="col-lg-4">
-    <div class="card card-wing card-wing-gold shadow-sm p-4">
-        <h4 class="fw-bold mb-3">Riepilogo Ordine</h4>
-        <div class="d-flex justify-content-between my-2 fs-5">
-            <span>Totale Parziale:</span>
-            <strong class="text-primary">&euro; {{ "%.2f"|format(totale) }}</strong>
+        <div class="card card-wing card-wing-gold shadow-sm p-4">
+            <h4 class="fw-bold mb-3">Riepilogo Ordine</h4>
+            <div class="d-flex justify-content-between my-2 fs-5">
+                <span>Totale Parziale:</span>
+                <strong class="text-primary">&euro; {{ "%.2f"|format(totale) }}</strong>
+            </div>
+            <hr>
+            <div class="d-grid gap-2 mt-3">
+                <a href="{{ url_for('cassa') }}" class="btn btn-success btn-lg fw-semibold">
+                    <i class="bi bi-cash-stack me-1"></i> Procedi alla Cassa
+                </a>
+                <form action="{{ url_for('svuota_carrello') }}" method="POST" class="d-grid">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash me-1"></i> Svuota Carrello
+                    </button>
+                </form>
+            </div>
         </div>
-        <hr>
-        <div class="d-grid gap-2 mt-3">
-            <!-- Collegamento alla nuova pagina di cassa -->
-            <a href="{{ url_for('cassa') }}" class="btn btn-success btn-lg fw-semibold">
-                <i class="bi bi-cash-stack me-1"></i> Procedi alla Cassa
-            </a>
-            <form action="{{ url_for('svuota_carrello') }}" method="POST" class="d-grid">
-                <button type="submit" class="btn btn-outline-danger btn-sm">
-                    <i class="bi bi-trash me-1"></i> Svuota Carrello
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
     </div>
 </div>
 {% else %}
