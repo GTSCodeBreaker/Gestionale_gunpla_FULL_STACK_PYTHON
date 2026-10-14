@@ -174,7 +174,7 @@ def svuota_carrello():
 
 @app.route("/gunpla/modifica/<int:id_gunpla>", methods=["GET", "POST"])
 def modifica_gunpla(id_gunpla):
-    """Gestisce la modifica recuperando e aggiornando il prodotto tramite database.py."""
+    """Gestisce la modifica delle scorte consentendo di aumentare o diminuire la quantità."""
     tutti_i_gunpla = ottieni_tutti_i_model_kit()
     gunpla = next((g for g in tutti_i_gunpla if g["id_gunpla"] == id_gunpla), None)
     
@@ -183,19 +183,25 @@ def modifica_gunpla(id_gunpla):
         return redirect(url_for("dashboard"))
 
     if request.method == "POST":
-        nuova_quantita = request.form.get("quantita", type=int)
-        differenza = nuova_quantita - gunpla["quantita"]
-        
+        operazione = request.form.get("operazione", "aumenta")
+        quantita_input = request.form.get("quantita", type=int, default=0)
+
+        if quantita_input <= 0:
+            flash("Inserisci una quantità valida maggiore di zero!", "warning")
+            return render_template("modifica_gunpla.html", gunpla=gunpla)
+
+        # Se l'operazione è "diminuisci", trasformiamo il valore in negativo
+        differenza = quantita_input if operazione == "aumenta" else -quantita_input
+
         # Aggiorna le scorte usando la funzione repository
         esito, messaggio = aggiornamento_quantita_gunplas(gunpla["jan"], differenza)
-        
         if esito:
-            flash(f"Model Kit '{gunpla['nome_modello']}' aggiornato!", "success")
+            flash(messaggio, "success")
         else:
             flash(messaggio, "danger")
             
         return redirect(url_for("dashboard"))
-        
+
     return render_template("modifica_gunpla.html", gunpla=gunpla)
 
 # ==============================================================================
